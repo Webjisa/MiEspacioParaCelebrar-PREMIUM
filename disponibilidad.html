@@ -45,7 +45,9 @@
         data-nav
         aria-label="Navegación principal"
       >
-        <a href="espacios.html">Espacios</a>
+        <a href="espacios.html">
+          Espacios
+        </a>
 
         <a
           href="disponibilidad.html"
@@ -54,11 +56,17 @@
           Disponibilidad
         </a>
 
-        <a href="reservar.html">Reservar</a>
+        <a href="reservar.html">
+          Reservar
+        </a>
 
-        <a href="seguimiento.html">Consultar</a>
+        <a href="seguimiento.html">
+          Consultar
+        </a>
 
-        <a href="acceso.html">Área privada</a>
+        <a href="acceso.html">
+          Área privada
+        </a>
       </nav>
 
     </div>
@@ -84,16 +92,14 @@
             </h1>
 
             <p>
-              Indica cuándo quieres celebrar tu evento y te mostraremos
-              los espacios disponibles.
+              Indica cuándo quieres celebrar tu evento
+              y te mostraremos los espacios disponibles.
             </p>
 
           </div>
 
         </div>
 
-
-        <!-- BUSCADOR -->
 
         <div class="panel">
 
@@ -120,14 +126,14 @@
               <div class="field">
 
                 <label for="end-date">
-                  Fecha de fin
-                  <span class="field-help">(opcional)</span>
+                  Hasta
                 </label>
 
                 <input
                   id="end-date"
                   name="end_date"
                   type="date"
+                  required
                 >
 
               </div>
@@ -158,8 +164,6 @@
         </div>
 
 
-        <!-- RESULTADOS -->
-
         <section
           id="availability-results"
           class="panel panel-spaced"
@@ -174,20 +178,59 @@
             Espacios disponibles
           </h2>
 
-          <p class="card-copy">
-            Selecciona una fecha para ver los espacios que puedes reservar.
-          </p>
-
-
           <div id="available-spaces">
 
             <div class="empty">
-              Introduce una fecha para comenzar la búsqueda.
+              Selecciona una fecha para buscar espacios disponibles.
             </div>
 
           </div>
 
         </section>
+
+      </div>
+
+    </section>
+
+
+    <section class="section">
+
+      <div class="container">
+
+        <div class="panel panel-soft">
+
+          <span class="eyebrow">
+            ¿Ya tienes claro dónde celebrar?
+          </span>
+
+          <h2>
+            Consulta todos nuestros espacios.
+          </h2>
+
+          <p class="card-copy">
+            Descubre sus características y consulta sus opciones
+            antes de solicitar una reserva.
+          </p>
+
+          <div class="hero-actions">
+
+            <a
+              class="button button-primary"
+              href="espacios.html"
+            >
+              Ver espacios
+            </a>
+
+            <a
+              class="button button-secondary"
+              href="reservar.html"
+            >
+              Solicitar reserva
+            </a>
+
+          </div>
+
+        </div>
 
       </div>
 
