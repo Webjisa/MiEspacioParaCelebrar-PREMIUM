@@ -3,35 +3,444 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="MiEspacioParaCelebrar: espacios para celebraciones y eventos.">
+
+  <meta
+    name="description"
+    content="Consulta la disponibilidad de los espacios de MiEspacioParaCelebrar."
+  >
+
   <title>Disponibilidad · MiEspacioParaCelebrar</title>
+
   <link rel="icon" href="assets/logo-placeholder.svg" type="image/svg+xml">
   <link rel="stylesheet" href="css/main.css">
   <script defer src="js/app.js"></script>
 </head>
+
 <body>
+
   <header class="site-header">
     <div class="container nav">
-      <a class="brand" href="index.html">MiEspacioParaCelebrar</a>
-      <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="site-nav">Menú</button>
-      <nav id="site-nav" class="nav-links" data-nav aria-label="Navegación principal">
-        <a data-page="espacios.html" href="espacios.html">Espacios</a>
-        <a data-page="disponibilidad.html" href="disponibilidad.html">Disponibilidad</a>
-        <a data-page="reservar.html" href="reservar.html">Reservar</a>
-        <a data-page="seguimiento.html" href="seguimiento.html">Consultar</a>
-        <a data-page="acceso.html" href="acceso.html">Área privada</a>
+
+      <a
+        class="brand"
+        href="index.html"
+        aria-label="MiEspacioParaCelebrar, inicio"
+      >
+        MiEspacioParaCelebrar
+      </a>
+
+      <button
+        class="nav-toggle"
+        type="button"
+        data-nav-toggle
+        aria-expanded="false"
+        aria-controls="site-nav"
+      >
+        Menú
+      </button>
+
+      <nav
+        id="site-nav"
+        class="nav-links"
+        data-nav
+        aria-label="Navegación principal"
+      >
+        <a data-page="espacios.html" href="espacios.html">
+          Espacios
+        </a>
+
+        <a
+          data-page="disponibilidad.html"
+          href="disponibilidad.html"
+        >
+          Disponibilidad
+        </a>
+
+        <a data-page="reservar.html" href="reservar.html">
+          Reservar
+        </a>
+
+        <a data-page="seguimiento.html" href="seguimiento.html">
+          Consultar
+        </a>
+
+        <a data-page="acceso.html" href="acceso.html">
+          Área privada
+        </a>
       </nav>
+
     </div>
   </header>
+
+
   <main>
 
-<section class="section"><div class="container"><div class="section-header"><div><span class="eyebrow">Calendario</span><h1>Disponibilidad</h1><p>Diseño base de calendario con los estados visuales definidos para el proyecto.</p></div></div><div class="panel calendar-shell" data-calendar><div class="calendar-head"><strong data-calendar-title>Octubre 2026</strong><div class="calendar-nav"><button class="button button-quiet" type="button" data-calendar-prev aria-label="Mes anterior">←</button><button class="button button-quiet" type="button" data-calendar-next aria-label="Mes siguiente">→</button></div></div><div class="calendar-grid" data-calendar-grid></div><div class="calendar-legend"><span class="legend-item"><span class="legend-mark"></span>Disponible</span><span class="legend-item"><span class="legend-mark selected"></span>Seleccionada</span><span class="legend-item"><span class="legend-mark occupied"></span>Ocupada</span><span class="legend-item"><span class="legend-mark held"></span>Retenida</span></div></div></div></section><script defer src="js/calendar.js"></script>
+    <section class="section">
+
+      <div class="container">
+
+        <div class="section-header">
+
+          <div>
+
+            <span class="eyebrow">
+              Calendario
+            </span>
+
+            <h1>
+              Consulta disponibilidad.
+            </h1>
+
+            <p>
+              Selecciona un espacio y consulta sus fechas disponibles
+              antes de solicitar una reserva.
+            </p>
+
+          </div>
+
+        </div>
+
+
+        <div class="grid grid-2">
+
+          <!-- SELECTOR DE ESPACIO -->
+
+          <aside class="panel">
+
+            <span class="eyebrow">
+              Espacio
+            </span>
+
+            <h2>
+              Elige un espacio
+            </h2>
+
+            <div class="field">
+
+              <label for="space-select">
+                Espacio
+              </label>
+
+              <select id="space-select" name="space">
+                <option value="">
+                  Selecciona un espacio
+                </option>
+
+                <option value="ejemplo-1">
+                  Espacio de ejemplo
+                </option>
+
+                <option value="ejemplo-2">
+                  Otro espacio
+                </option>
+              </select>
+
+            </div>
+
+            <p class="field-help">
+              Más adelante esta lista se cargará automáticamente
+              con los espacios activos.
+            </p>
+
+            <div class="notice notice-spaced">
+              Selecciona un espacio para consultar su calendario.
+            </div>
+
+          </aside>
+
+
+          <!-- CALENDARIO -->
+
+          <section class="panel calendar-shell">
+
+            <div class="calendar-head">
+
+              <div>
+                <div class="card-meta">
+                  Espacio de ejemplo
+                </div>
+
+                <h2>
+                  Octubre 2026
+                </h2>
+              </div>
+
+              <div class="calendar-nav">
+
+                <button
+                  class="button button-quiet"
+                  type="button"
+                  aria-label="Mes anterior"
+                >
+                  ←
+                </button>
+
+                <button
+                  class="button button-quiet"
+                  type="button"
+                  aria-label="Mes siguiente"
+                >
+                  →
+                </button>
+
+              </div>
+
+            </div>
+
+
+            <div
+              class="calendar-grid"
+              role="grid"
+              aria-label="Calendario de disponibilidad"
+            >
+
+              <div class="calendar-weekday">L</div>
+              <div class="calendar-weekday">M</div>
+              <div class="calendar-weekday">X</div>
+              <div class="calendar-weekday">J</div>
+              <div class="calendar-weekday">V</div>
+              <div class="calendar-weekday">S</div>
+              <div class="calendar-weekday">D</div>
+
+
+              <button class="calendar-day other-month" type="button" disabled>
+                28
+              </button>
+
+              <button class="calendar-day other-month" type="button" disabled>
+                29
+              </button>
+
+              <button class="calendar-day other-month" type="button" disabled>
+                30
+              </button>
+
+              <button class="calendar-day" type="button">
+                1
+              </button>
+
+              <button class="calendar-day" type="button">
+                2
+              </button>
+
+              <button class="calendar-day occupied" type="button" disabled>
+                3
+              </button>
+
+              <button class="calendar-day" type="button">
+                4
+              </button>
+
+
+              <button class="calendar-day" type="button">
+                5
+              </button>
+
+              <button class="calendar-day selected" type="button">
+                6
+              </button>
+
+              <button class="calendar-day selected" type="button">
+                7
+              </button>
+
+              <button class="calendar-day" type="button">
+                8
+              </button>
+
+              <button class="calendar-day held" type="button" disabled>
+                9
+              </button>
+
+              <button class="calendar-day" type="button">
+                10
+              </button>
+
+              <button class="calendar-day" type="button">
+                11
+              </button>
+
+
+              <button class="calendar-day" type="button">
+                12
+              </button>
+
+              <button class="calendar-day" type="button">
+                13
+              </button>
+
+              <button class="calendar-day occupied" type="button" disabled>
+                14
+              </button>
+
+              <button class="calendar-day" type="button">
+                15
+              </button>
+
+              <button class="calendar-day" type="button">
+                16
+              </button>
+
+              <button class="calendar-day" type="button">
+                17
+              </button>
+
+              <button class="calendar-day" type="button">
+                18
+              </button>
+
+
+              <button class="calendar-day past" type="button" disabled>
+                19
+              </button>
+
+              <button class="calendar-day past" type="button" disabled>
+                20
+              </button>
+
+              <button class="calendar-day past" type="button" disabled>
+                21
+              </button>
+
+              <button class="calendar-day" type="button">
+                22
+              </button>
+
+              <button class="calendar-day" type="button">
+                23
+              </button>
+
+              <button class="calendar-day held" type="button" disabled>
+                24
+              </button>
+
+              <button class="calendar-day" type="button">
+                25
+              </button>
+
+
+              <button class="calendar-day" type="button">
+                26
+              </button>
+
+              <button class="calendar-day" type="button">
+                27
+              </button>
+
+              <button class="calendar-day" type="button">
+                28
+              </button>
+
+              <button class="calendar-day" type="button">
+                29
+              </button>
+
+              <button class="calendar-day occupied" type="button" disabled>
+                30
+              </button>
+
+              <button class="calendar-day" type="button">
+                31
+              </button>
+
+              <button class="calendar-day other-month" type="button" disabled>
+                1
+              </button>
+
+            </div>
+
+
+            <div
+              class="calendar-legend"
+              aria-label="Leyenda del calendario"
+            >
+
+              <span class="legend-item">
+                <span class="legend-mark"></span>
+                Disponible
+              </span>
+
+              <span class="legend-item">
+                <span class="legend-mark selected"></span>
+                Seleccionada
+              </span>
+
+              <span class="legend-item">
+                <span class="legend-mark occupied"></span>
+                Ocupada
+              </span>
+
+              <span class="legend-item">
+                <span class="legend-mark held"></span>
+                Retenida
+              </span>
+
+            </div>
+
+          </section>
+
+        </div>
+
+
+        <div class="panel panel-soft panel-spaced">
+
+          <span class="eyebrow">
+            Reserva
+          </span>
+
+          <h2>
+            ¿Has encontrado tu fecha?
+          </h2>
+
+          <p class="card-copy">
+            Una vez comprobada la disponibilidad puedes continuar
+            con la solicitud de reserva.
+          </p>
+
+          <div class="hero-actions">
+
+            <a
+              class="button button-primary"
+              href="reservar.html"
+            >
+              Solicitar reserva
+            </a>
+
+            <a
+              class="button button-secondary"
+              href="espacios.html"
+            >
+              Ver espacios
+            </a>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
   </main>
+
+
   <footer class="site-footer">
+
     <div class="container footer-grid">
-      <div>MiEspacioParaCelebrar</div>
-      <div>© <span data-year></span> · Proyecto en reconstrucción segura</div>
+
+      <div>
+        <strong>
+          MiEspacioParaCelebrar
+        </strong>
+      </div>
+
+      <div>
+        © <span data-year></span>
+      </div>
+
     </div>
+
   </footer>
+
 </body>
 </html>
