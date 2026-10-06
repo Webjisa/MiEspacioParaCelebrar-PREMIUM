@@ -2,36 +2,369 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="MiEspacioParaCelebrar: espacios para celebraciones y eventos.">
-  <title>Reservar · MiEspacioParaCelebrar</title>
-  <link rel="icon" href="assets/logo-placeholder.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="css/main.css">
-  <script defer src="js/app.js"></script>
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  >
+
+  <meta
+    name="description"
+    content="Solicita una reserva en MiEspacioParaCelebrar."
+  >
+
+  <title>Solicitar reserva · MiEspacioParaCelebrar</title>
+
+  <link
+    rel="icon"
+    href="assets/logo-placeholder.svg"
+    type="image/svg+xml"
+  >
+
+  <link
+    rel="stylesheet"
+    href="css/main.css"
+  >
+
+  <script
+    defer
+    src="js/app.js"
+  ></script>
 </head>
+
 <body>
+
+  <!-- =========================
+       CABECERA
+  ========================== -->
+
   <header class="site-header">
+
     <div class="container nav">
-      <a class="brand" href="index.html">MiEspacioParaCelebrar</a>
-      <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="site-nav">Menú</button>
-      <nav id="site-nav" class="nav-links" data-nav aria-label="Navegación principal">
-        <a data-page="espacios.html" href="espacios.html">Espacios</a>
-        <a data-page="disponibilidad.html" href="disponibilidad.html">Disponibilidad</a>
-        <a data-page="reservar.html" href="reservar.html">Reservar</a>
-        <a data-page="seguimiento.html" href="seguimiento.html">Consultar</a>
-        <a data-page="acceso.html" href="acceso.html">Área privada</a>
+
+      <a
+        class="brand"
+        href="index.html"
+        aria-label="MiEspacioParaCelebrar, inicio"
+      >
+        MiEspacioParaCelebrar
+      </a>
+
+      <button
+        class="nav-toggle"
+        type="button"
+        data-nav-toggle
+        aria-expanded="false"
+        aria-controls="site-nav"
+      >
+        Menú
+      </button>
+
+      <nav
+        id="site-nav"
+        class="nav-links"
+        data-nav
+        aria-label="Navegación principal"
+      >
+
+        <a href="espacios.html">
+          Espacios
+        </a>
+
+        <a href="disponibilidad.html">
+          Disponibilidad
+        </a>
+
+        <a href="seguimiento.html">
+          Consultar
+        </a>
+
       </nav>
+
     </div>
+
   </header>
+
+
+  <!-- =========================
+       CONTENIDO
+  ========================== -->
+
   <main>
 
-<section class="section"><div class="container"><div class="section-header"><div><span class="eyebrow">Solicitud</span><h1>Solicitar reserva</h1><p>Formulario inicial. La creación definitiva de reservas se hará únicamente mediante RPC autorizada.</p></div></div><div class="panel"><form class="form-grid"><div class="field"><label for="name">Nombre</label><input id="name" name="name" autocomplete="name" required></div><div class="field"><label for="email">Email</label><input id="email" name="email" type="email" autocomplete="email" required></div><div class="field"><label for="phone">Teléfono</label><input id="phone" name="phone" type="tel" autocomplete="tel" inputmode="tel"></div><div class="field"><label for="space">Espacio</label><select id="space" name="space"><option>Espacio de ejemplo</option></select></div><div class="field"><label for="start">Fecha de inicio</label><input id="start" name="start" type="date" required></div><div class="field"><label for="end">Fecha de fin</label><input id="end" name="end" type="date" required></div><div class="field field-full"><label for="notes">Notas</label><textarea id="notes" name="notes" maxlength="1000"></textarea><span class="field-help">No introduzcas datos de tarjeta ni contraseñas.</span></div><div class="field field-full"><button class="button button-primary button-full" type="button">Enviar solicitud</button></div></form></div></div></section>
+    <section class="section">
+
+      <div class="container">
+
+        <div class="section-header">
+
+          <div>
+
+            <span class="eyebrow">
+              Solicitud
+            </span>
+
+            <h1>
+              Solicitar reserva
+            </h1>
+
+            <p>
+              Completa tus datos para enviar la solicitud
+              de reserva del espacio seleccionado.
+            </p>
+
+          </div>
+
+        </div>
+
+
+        <!-- =========================
+             ESPACIO Y FECHAS
+        ========================== -->
+
+        <div class="panel panel-soft">
+
+          <span class="eyebrow">
+            Tu selección
+          </span>
+
+          <h2>
+            Espacio y fechas
+          </h2>
+
+          <div class="form-grid">
+
+            <div class="field">
+
+              <label for="selected-space">
+                Espacio
+              </label>
+
+              <input
+                id="selected-space"
+                name="space"
+                type="text"
+                value=""
+                readonly
+                aria-readonly="true"
+                placeholder="Espacio seleccionado"
+              >
+
+            </div>
+
+
+            <div class="field">
+
+              <label for="selected-start">
+                Fecha de inicio
+              </label>
+
+              <input
+                id="selected-start"
+                name="start"
+                type="date"
+                value=""
+                readonly
+                aria-readonly="true"
+              >
+
+            </div>
+
+
+            <div class="field">
+
+              <label for="selected-end">
+                Hasta
+              </label>
+
+              <input
+                id="selected-end"
+                name="end"
+                type="date"
+                value=""
+                readonly
+                aria-readonly="true"
+              >
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- =========================
+             DATOS DEL CLIENTE
+        ========================== -->
+
+        <div class="panel panel-spaced">
+
+          <span class="eyebrow">
+            Tus datos
+          </span>
+
+          <h2>
+            Datos de contacto
+          </h2>
+
+          <form
+            id="booking-request-form"
+          >
+
+            <div class="form-grid">
+
+              <div class="field">
+
+                <label for="name">
+                  Nombre
+                </label>
+
+                <input
+                  id="name"
+                  name="name"
+                  type="text"
+                  autocomplete="name"
+                  required
+                >
+
+              </div>
+
+
+              <div class="field">
+
+                <label for="email">
+                  Email
+                </label>
+
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autocomplete="email"
+                  required
+                >
+
+              </div>
+
+
+              <div class="field">
+
+                <label for="phone">
+                  Teléfono
+                </label>
+
+                <input
+                  id="phone"
+                  name="phone"
+                  type="tel"
+                  autocomplete="tel"
+                  inputmode="tel"
+                >
+
+              </div>
+
+
+              <div class="field field-full">
+
+                <label for="notes">
+                  Notas
+                </label>
+
+                <textarea
+                  id="notes"
+                  name="notes"
+                  maxlength="1000"
+                ></textarea>
+
+                <span class="field-help">
+                  No introduzcas datos de tarjeta ni contraseñas.
+                </span>
+
+              </div>
+
+
+              <div class="field field-full">
+
+                <button
+                  id="booking-submit"
+                  class="button button-primary button-full"
+                  type="submit"
+                >
+                  Enviar solicitud
+                </button>
+
+              </div>
+
+            </div>
+
+          </form>
+
+        </div>
+
+
+        <!-- =========================
+             RESULTADO
+        ========================== -->
+
+        <div
+          id="booking-request-result"
+          class="notice notice-spaced"
+          aria-live="polite"
+        >
+          La solicitud se enviará al propietario del espacio
+          para su formalización.
+        </div>
+
+
+        <!-- =========================
+             VOLVER
+        ========================== -->
+
+        <div class="hero-actions">
+
+          <a
+            class="button button-secondary"
+            href="espacios.html"
+          >
+            Volver a espacios
+          </a>
+
+          <a
+            class="button button-quiet"
+            href="disponibilidad.html"
+          >
+            Buscar otro espacio
+          </a>
+
+        </div>
+
+      </div>
+
+    </section>
+
   </main>
+
+
+  <!-- =========================
+       PIE
+  ========================== -->
+
   <footer class="site-footer">
+
     <div class="container footer-grid">
-      <div>MiEspacioParaCelebrar</div>
-      <div>© <span data-year></span> · Proyecto en reconstrucción segura</div>
+
+      <div>
+        <strong>
+          MiEspacioParaCelebrar
+        </strong>
+      </div>
+
+      <div>
+        © <span data-year></span>
+      </div>
+
     </div>
+
   </footer>
+
 </body>
 </html>
