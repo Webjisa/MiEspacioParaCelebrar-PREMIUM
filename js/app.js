@@ -44,14 +44,13 @@
      FECHA ACTUAL
   ========================= */
 
-  const now = new Date();
+  const today = new Date();
 
-  const currentYear = now.getFullYear();
-  const currentMonth = String(now.getMonth() + 1).padStart(2, '0');
-  const currentDay = String(now.getDate()).padStart(2, '0');
-
-  const todayString =
-    `${currentYear}-${currentMonth}-${currentDay}`;
+  const todayString = [
+    today.getFullYear(),
+    String(today.getMonth() + 1).padStart(2, '0'),
+    String(today.getDate()).padStart(2, '0')
+  ].join('-');
 
 
   /* =========================
@@ -67,23 +66,14 @@
   const endDate =
     document.querySelector('#end-date');
 
-
   if (startDate && endDate) {
 
-    /*
-     * No permitir fechas anteriores a hoy.
-     */
     startDate.min = todayString;
     endDate.min = todayString;
 
 
     /*
-     * Mantener "Hasta" sincronizado con
-     * la fecha de inicio.
-     *
-     * Se utilizan tanto "input" como "change"
-     * porque los navegadores móviles pueden
-     * gestionar el selector de fechas de forma distinta.
+     * Sincroniza "Hasta" con "Fecha de inicio".
      */
     const syncEndDate = () => {
 
@@ -95,34 +85,30 @@
         return;
       }
 
-      /*
-       * La fecha final no puede ser anterior
-       * a la fecha inicial.
-       */
       endDate.min = startValue;
 
       /*
-       * Al elegir una nueva fecha inicial:
-       * - si no existe fecha final → copiar inicio
-       * - si la fecha final es anterior → copiar inicio
+       * Si no hay fecha final, usamos
+       * automáticamente la fecha inicial.
        */
-      if (
-        !endDate.value ||
-        endDate.value < startValue
-      ) {
+      if (!endDate.value) {
         endDate.value = startValue;
+        return;
+      }
 
-        /*
-         * Forzar actualización visual del
-         * campo en determinados navegadores móviles.
-         */
-        endDate.dispatchEvent(
-          new Event('change', { bubbles: true })
-        );
+      /*
+       * Si la fecha final queda antes que
+       * la fecha inicial, la corregimos.
+       */
+      if (endDate.value < startValue) {
+        endDate.value = startValue;
       }
     };
 
 
+    /*
+     * Escritorio y Android.
+     */
     startDate.addEventListener(
       'input',
       syncEndDate
@@ -135,8 +121,25 @@
 
 
     /*
-     * Protección adicional al modificar
-     * manualmente la fecha final.
+     * Safari / iPhone.
+     *
+     * En algunos casos Safari termina de
+     * actualizar el campo al perder el foco.
+     */
+    startDate.addEventListener(
+      'blur',
+      syncEndDate
+    );
+
+    startDate.addEventListener(
+      'focusout',
+      syncEndDate
+    );
+
+
+    /*
+     * Si el usuario modifica "Hasta",
+     * nunca puede quedar antes del inicio.
      */
     const validateEndDate = () => {
 
@@ -150,7 +153,7 @@
       endDate.min = startValue;
 
       if (
-        endValue &&
+        !endValue ||
         endValue < startValue
       ) {
         endDate.value = startValue;
@@ -168,11 +171,16 @@
       validateEndDate
     );
 
+    endDate.addEventListener(
+      'blur',
+      validateEndDate
+    );
+
   }
 
 
   /* =========================
-     FORMULARIO DE DISPONIBILIDAD
+     BÚSQUEDA
   ========================= */
 
   if (availabilityForm) {
@@ -188,36 +196,27 @@
         }
 
         const startValue = startDate.value;
-        const endValue = endDate.value;
 
-        /*
-         * Validación básica.
-         */
         if (!startValue) {
           startDate.focus();
           return;
         }
 
         /*
-         * Si por cualquier motivo no existe
-         * fecha final, usamos la inicial.
+         * Si "Hasta" está vacío, automáticamente
+         * utilizamos la fecha de inicio.
          */
-        if (!endValue) {
+        if (!endDate.value) {
           endDate.value = startValue;
         }
 
         /*
-         * La fecha final nunca puede ser anterior
-         * a la fecha inicial.
+         * Seguridad adicional:
+         * nunca permitir un final anterior al inicio.
          */
         if (endDate.value < startValue) {
           endDate.value = startValue;
         }
-
-
-        /* =========================
-           RESULTADOS
-        ========================= */
 
         const results =
           document.querySelector('#available-spaces');
@@ -226,30 +225,26 @@
           return;
         }
 
-        /*
-         * Todavía no consultamos Supabase.
-         * Esta parte se conectará al backend
-         * cuando terminemos la estructura.
-         */
-
         results.replaceChildren();
 
-        const message = document.createElement('div');
+        const message =
+          document.createElement('div');
 
         message.className = 'empty';
 
-        const textStart =
+        const text =
           document.createTextNode(
             'Búsqueda preparada para: '
           );
 
-        const strongStart =
+        message.appendChild(text);
+
+        const start =
           document.createElement('strong');
 
-        strongStart.textContent = startValue;
+        start.textContent = startValue;
 
-        message.appendChild(textStart);
-        message.appendChild(strongStart);
+        message.appendChild(start);
 
         if (endDate.value !== startValue) {
 
@@ -257,12 +252,12 @@
             document.createTextNode(' hasta ')
           );
 
-          const strongEnd =
+          const end =
             document.createElement('strong');
 
-          strongEnd.textContent = endDate.value;
+          end.textContent = endDate.value;
 
-          message.appendChild(strongEnd);
+          message.appendChild(end);
         }
 
         results.appendChild(message);
@@ -271,17 +266,13 @@
 
 
     /* =========================
-       RESET
+       LIMPIAR
     ========================= */
 
     availabilityForm.addEventListener(
       'reset',
       () => {
 
-        /*
-         * Esperamos a que el navegador termine
-         * el reset nativo del formulario.
-         */
         window.setTimeout(() => {
 
           if (startDate) {
@@ -304,6 +295,7 @@
               document.createElement('div');
 
             message.className = 'empty';
+
             message.textContent =
               'Selecciona una fecha para buscar espacios disponibles.';
 
@@ -313,7 +305,6 @@
         }, 0);
       }
     );
-
   }
 
 })();
