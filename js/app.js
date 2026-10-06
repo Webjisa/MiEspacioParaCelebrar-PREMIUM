@@ -66,15 +66,17 @@
   const endDate =
     document.querySelector('#end-date');
 
+
   if (startDate && endDate) {
 
     startDate.min = todayString;
     endDate.min = todayString;
 
 
-    /*
-     * Sincroniza "Hasta" con "Fecha de inicio".
-     */
+    /* =========================
+       SINCRONIZAR FECHA FINAL
+    ========================= */
+
     const syncEndDate = () => {
 
       const startValue = startDate.value;
@@ -88,8 +90,9 @@
       endDate.min = startValue;
 
       /*
-       * Si no hay fecha final, usamos
-       * automáticamente la fecha inicial.
+       * Si Hasta está vacío,
+       * debe ser exactamente igual
+       * a Fecha de inicio.
        */
       if (!endDate.value) {
         endDate.value = startValue;
@@ -97,8 +100,8 @@
       }
 
       /*
-       * Si la fecha final queda antes que
-       * la fecha inicial, la corregimos.
+       * Nunca permitimos que Hasta
+       * sea anterior al inicio.
        */
       if (endDate.value < startValue) {
         endDate.value = startValue;
@@ -107,7 +110,7 @@
 
 
     /*
-     * Escritorio y Android.
+     * Eventos normales.
      */
     startDate.addEventListener(
       'input',
@@ -119,13 +122,6 @@
       syncEndDate
     );
 
-
-    /*
-     * Safari / iPhone.
-     *
-     * En algunos casos Safari termina de
-     * actualizar el campo al perder el foco.
-     */
     startDate.addEventListener(
       'blur',
       syncEndDate
@@ -137,10 +133,66 @@
     );
 
 
+    /* =========================
+       SOLUCIÓN PARA IPHONE
+    ========================= */
+
+    const prepareEndDateForPicker = () => {
+
+      const startValue = startDate.value;
+
+      if (!startValue) {
+        return;
+      }
+
+      endDate.min = startValue;
+
+      /*
+       * IMPORTANTE:
+       * rellenamos el valor ANTES de que
+       * Safari abra el selector nativo.
+       */
+      if (!endDate.value) {
+        endDate.value = startValue;
+      }
+    };
+
+
     /*
-     * Si el usuario modifica "Hasta",
-     * nunca puede quedar antes del inicio.
+     * pointerdown se ejecuta antes de que
+     * Safari abra el selector de fecha.
      */
+    endDate.addEventListener(
+      'pointerdown',
+      prepareEndDateForPicker
+    );
+
+
+    /*
+     * touchstart añade compatibilidad con
+     * versiones de Safari/iOS que gestionan
+     * date inputs de forma diferente.
+     */
+    endDate.addEventListener(
+      'touchstart',
+      prepareEndDateForPicker,
+      { passive: true }
+    );
+
+
+    /*
+     * También cubrimos teclado/escritorio.
+     */
+    endDate.addEventListener(
+      'focus',
+      prepareEndDateForPicker
+    );
+
+
+    /* =========================
+       VALIDAR FECHA FINAL
+    ========================= */
+
     const validateEndDate = () => {
 
       const startValue = startDate.value;
@@ -180,7 +232,7 @@
 
 
   /* =========================
-     BÚSQUEDA
+     FORMULARIO
   ========================= */
 
   if (availabilityForm) {
@@ -203,20 +255,24 @@
         }
 
         /*
-         * Si "Hasta" está vacío, automáticamente
-         * utilizamos la fecha de inicio.
+         * Si por cualquier motivo Hasta
+         * estuviera vacío, lo completamos.
          */
         if (!endDate.value) {
           endDate.value = startValue;
         }
 
         /*
-         * Seguridad adicional:
-         * nunca permitir un final anterior al inicio.
+         * Nunca permitir un rango inválido.
          */
         if (endDate.value < startValue) {
           endDate.value = startValue;
         }
+
+
+        /* =========================
+           RESULTADOS TEMPORALES
+        ========================= */
 
         const results =
           document.querySelector('#available-spaces');
@@ -232,19 +288,20 @@
 
         message.className = 'empty';
 
-        const text =
+        const startText =
           document.createTextNode(
             'Búsqueda preparada para: '
           );
 
-        message.appendChild(text);
+        message.appendChild(startText);
 
-        const start =
+        const startElement =
           document.createElement('strong');
 
-        start.textContent = startValue;
+        startElement.textContent = startValue;
 
-        message.appendChild(start);
+        message.appendChild(startElement);
+
 
         if (endDate.value !== startValue) {
 
@@ -252,12 +309,13 @@
             document.createTextNode(' hasta ')
           );
 
-          const end =
+          const endElement =
             document.createElement('strong');
 
-          end.textContent = endDate.value;
+          endElement.textContent =
+            endDate.value;
 
-          message.appendChild(end);
+          message.appendChild(endElement);
         }
 
         results.appendChild(message);
@@ -305,6 +363,7 @@
         }, 0);
       }
     );
+
   }
 
 })();
