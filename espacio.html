@@ -2,11 +2,14 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  >
 
   <meta
     name="description"
-    content="Consulta la información, disponibilidad y condiciones de este espacio para celebraciones."
+    content="Consulta la información y disponibilidad de un espacio para celebrar."
   >
 
   <title>Espacio · MiEspacioParaCelebrar</title>
@@ -29,10 +32,6 @@
 </head>
 
 <body>
-
-  <!-- =========================
-       CABECERA
-  ========================== -->
 
   <header class="site-header">
 
@@ -63,15 +62,24 @@
         aria-label="Navegación principal"
       >
 
-        <a href="espacios.html">
+        <a
+          data-page="espacios.html"
+          href="espacios.html"
+        >
           Espacios
         </a>
 
-        <a href="disponibilidad.html">
+        <a
+          data-page="disponibilidad.html"
+          href="disponibilidad.html"
+        >
           Disponibilidad
         </a>
 
-        <a href="seguimiento.html">
+        <a
+          data-page="seguimiento.html"
+          href="seguimiento.html"
+        >
           Consultar
         </a>
 
@@ -82,41 +90,30 @@
   </header>
 
 
-  <!-- =========================
-       CONTENIDO
-  ========================== -->
-
   <main>
-
-    <!-- =========================
-         FICHA PRINCIPAL
-    ========================== -->
 
     <section class="section">
 
       <div class="container">
 
         <a
-          class="button button-quiet"
+          class="button button-ghost"
           href="espacios.html"
         >
           ← Volver a espacios
         </a>
 
 
-        <div
-          class="grid grid-2"
-          style="margin-top: 24px;"
-        >
+        <div class="grid grid-2 section-spaced">
 
-          <!-- IMAGEN -->
+
+          <!-- IMAGEN DEL ESPACIO -->
 
           <div class="card">
 
             <div
               class="card-media"
-              style="min-height: 420px;"
-              aria-label="Imagen principal del espacio"
+              aria-label="Imagen del espacio pendiente de incorporar"
             >
               Imagen del espacio
             </div>
@@ -124,75 +121,65 @@
           </div>
 
 
-          <!-- INFORMACIÓN -->
+          <!-- INFORMACIÓN Y DISPONIBILIDAD -->
 
           <div class="panel">
 
-            <span class="eyebrow">
+            <div class="card-meta">
               Lucena
-            </span>
+            </div>
 
             <h1>
               Espacio de ejemplo
             </h1>
 
-            <p class="lead">
-              Un espacio pensado para disfrutar de tu celebración
-              con comodidad y tranquilidad.
+            <p class="card-copy">
+              Espacio pensado para reuniones, cumpleaños,
+              celebraciones familiares y otros eventos.
             </p>
 
-            <div class="notice">
-
-              <strong>
-                Desde 180 €
-              </strong>
-
-              <br>
-
-              Precio orientativo. Las condiciones y servicios
-              adicionales se mostrarán antes de solicitar la reserva.
-
-            </div>
+            <p class="price">
+              Desde 180 €
+            </p>
 
 
-            <!-- =========================
-                 FECHAS
-            ========================== -->
-
-            <div
-              class="panel-soft"
-              style="margin-top: 24px;"
-            >
+            <div class="panel panel-soft panel-spaced">
 
               <span class="eyebrow">
-                Fechas
+                Disponibilidad
               </span>
 
               <h2>
-                ¿Cuándo quieres celebrar?
+                Consulta tus fechas
               </h2>
 
               <p class="card-copy">
-                Indica la fecha o el periodo que necesitas.
+                Selecciona la fecha de inicio.
+                La fecha de finalización se completará automáticamente
+                y podrás modificarla si necesitas varios días.
               </p>
 
 
-              <form id="space-availability-form">
+              <form
+                id="space-availability-form"
+                novalidate
+              >
 
                 <div class="form-grid">
+
 
                   <div class="field">
 
                     <label for="space-start-date">
-                      Fecha de inicio
+                      Desde
                     </label>
 
                     <input
                       id="space-start-date"
                       name="start_date"
                       type="date"
-                      required
                       autocomplete="off"
+                      required
                     >
 
                   </div>
@@ -213,13 +200,14 @@
 
                   </div>
 
+
                 </div>
 
 
-                <div class="hero-actions">
+                <div class="form-actions">
 
                   <button
-                    class="button button-secondary"
+                    class="button button-primary"
                     type="submit"
                   >
                     Comprobar disponibilidad
@@ -229,36 +217,27 @@
 
               </form>
 
-            </div>
+
+              <div
+                id="space-availability-result"
+                class="notice"
+                role="status"
+                aria-live="polite"
+              ></div>
 
 
-            <!-- =========================
-                 RESULTADO
-            ========================== -->
+              <div class="form-actions">
 
-            <div
-              id="space-availability-result"
-              class="notice notice-spaced"
-              aria-live="polite"
-            >
-              Selecciona las fechas para comprobar
-              la disponibilidad de este espacio.
-            </div>
+                <a
+                  id="space-book-button"
+                  class="button button-primary"
+                  href="reservar.html"
+                  hidden
+                >
+                  Solicitar reserva
+                </a>
 
-
-            <!-- =========================
-                 RESERVA
-            ========================== -->
-
-            <div class="hero-actions">
-
-              <a
-                id="space-book-button"
-                class="button button-primary"
-                href="reservar.html"
-              >
-                Solicitar reserva
-              </a>
+              </div>
 
             </div>
 
@@ -266,103 +245,67 @@
 
         </div>
 
-      </div>
 
-    </section>
+        <!-- INFORMACIÓN DEL ESPACIO -->
+
+        <div class="grid grid-2 section-spaced">
 
 
-    <!-- =========================
-         INFORMACIÓN DEL ESPACIO
-    ========================== -->
-
-    <section class="section">
-
-      <div class="container">
-
-        <div class="grid grid-2">
-
-          <div class="panel">
+          <section class="panel">
 
             <span class="eyebrow">
               El espacio
             </span>
 
             <h2>
-              Sobre este espacio
+              Un lugar para tu celebración
             </h2>
 
             <p class="card-copy">
-              Aquí aparecerá la descripción completa del espacio,
-              sus características, distribución y equipamiento.
+              Aquí aparecerá la información completa del espacio,
+              sus características, capacidad, servicios y condiciones.
             </p>
 
-          </div>
+          </section>
 
 
-          <div class="panel">
+          <section class="panel">
 
             <span class="eyebrow">
               Condiciones
             </span>
 
             <h2>
-              Antes de reservar
+              Información de reserva
             </h2>
 
             <p class="card-copy">
-              Aquí aparecerán las condiciones de uso, horarios,
-              cancelación y servicios adicionales.
+              Las condiciones concretas de reserva, cancelación,
+              servicios adicionales y demás información aparecerán
+              aquí cuando el espacio esté conectado al catálogo real.
             </p>
 
-          </div>
+          </section>
+
 
         </div>
 
-      </div>
-
-    </section>
-
-
-    <!-- =========================
-         INFORMACIÓN DE RESERVA
-    ========================== -->
-
-    <section class="section">
-
-      <div class="container">
 
         <div class="panel panel-soft">
 
           <span class="eyebrow">
-            Reserva
+            ¿Quieres reservar?
           </span>
 
           <h2>
-            ¿Quieres celebrar aquí tu evento?
+            Consulta primero la disponibilidad
           </h2>
 
           <p class="card-copy">
-            Comprueba primero las fechas disponibles y continúa
-            con la solicitud de reserva.
+            Selecciona las fechas que necesitas y comprueba si este
+            espacio está disponible. Si lo está, podrás solicitar
+            la reserva directamente.
           </p>
-
-          <div class="hero-actions">
-
-            <a
-              class="button button-primary"
-              href="#space-availability-form"
-            >
-              Elegir fechas
-            </a>
-
-            <a
-              class="button button-secondary"
-              href="espacios.html"
-            >
-              Ver otros espacios
-            </a>
-
-          </div>
 
         </div>
 
@@ -372,10 +315,6 @@
 
   </main>
 
-
-  <!-- =========================
-       PIE
-  ========================== -->
 
   <footer class="site-footer">
 
