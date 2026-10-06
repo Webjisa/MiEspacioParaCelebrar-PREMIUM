@@ -398,6 +398,22 @@ p {
   box-shadow: var(--shadow-sm);
 }
 
+.card-media {
+  min-height: 220px;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    linear-gradient(
+      145deg,
+      #e5ede7 0%,
+      #edf1ea 48%,
+      #f3eee5 100%
+    );
+  color: var(--muted);
+  text-align: center;
+}
+
 .card-body {
   padding: 22px;
 }
@@ -417,26 +433,23 @@ p {
 }
 
 .card-footer {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
   gap: 14px;
   padding: 0 22px 22px;
 }
 
 .price {
-  flex: 0 0 auto;
-  white-space: nowrap;
-}
-
-.price {
-  display: inline-flex;
-  align-items: center;
-  flex: 0 0 auto;
+  min-width: max-content;
   white-space: nowrap;
   color: var(--green);
   font-size: 1.05rem;
   font-weight: 900;
+}
+
+.card-footer .button {
+  flex-shrink: 0;
 }
 
 /* =========================
@@ -912,6 +925,15 @@ tr:last-child td {
 
   .panel {
     padding: 19px;
+  }
+
+  .card-footer {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .card-footer .button {
+    width: 100%;
   }
 
   .calendar-day {
