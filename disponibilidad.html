@@ -45,29 +45,20 @@
         data-nav
         aria-label="Navegación principal"
       >
-        <a data-page="espacios.html" href="espacios.html">
-          Espacios
-        </a>
+        <a href="espacios.html">Espacios</a>
 
         <a
-          data-page="disponibilidad.html"
           href="disponibilidad.html"
           aria-current="page"
         >
           Disponibilidad
         </a>
 
-        <a data-page="reservar.html" href="reservar.html">
-          Reservar
-        </a>
+        <a href="reservar.html">Reservar</a>
 
-        <a data-page="seguimiento.html" href="seguimiento.html">
-          Consultar
-        </a>
+        <a href="seguimiento.html">Consultar</a>
 
-        <a data-page="acceso.html" href="acceso.html">
-          Área privada
-        </a>
+        <a href="acceso.html">Área privada</a>
       </nav>
 
     </div>
@@ -76,7 +67,6 @@
 
   <main>
 
-    <!-- BUSCADOR -->
     <section class="section">
 
       <div class="container">
@@ -94,8 +84,8 @@
             </h1>
 
             <p>
-              Indica la fecha de tu celebración o el periodo que necesitas
-              y te mostraremos los espacios disponibles.
+              Indica cuándo quieres celebrar tu evento y te mostraremos
+              los espacios disponibles.
             </p>
 
           </div>
@@ -103,19 +93,18 @@
         </div>
 
 
+        <!-- BUSCADOR -->
+
         <div class="panel">
 
-          <form
-            id="availability-form"
-            novalidate
-          >
+          <form id="availability-form">
 
             <div class="form-grid">
 
               <div class="field">
 
                 <label for="start-date">
-                  Fecha
+                  Fecha de inicio
                 </label>
 
                 <input
@@ -123,12 +112,7 @@
                   name="start_date"
                   type="date"
                   required
-                  autocomplete="off"
                 >
-
-                <span class="field-help">
-                  Para una sola fecha, utiliza únicamente este campo.
-                </span>
 
               </div>
 
@@ -136,19 +120,15 @@
               <div class="field">
 
                 <label for="end-date">
-                  Hasta
+                  Fecha de fin
+                  <span class="field-help">(opcional)</span>
                 </label>
 
                 <input
                   id="end-date"
                   name="end_date"
                   type="date"
-                  autocomplete="off"
                 >
-
-                <span class="field-help">
-                  Déjalo vacío si buscas un único día.
-                </span>
 
               </div>
 
@@ -179,6 +159,7 @@
 
 
         <!-- RESULTADOS -->
+
         <section
           id="availability-results"
           class="panel panel-spaced"
@@ -186,7 +167,7 @@
         >
 
           <span class="eyebrow">
-            Resultado
+            Resultados
           </span>
 
           <h2>
@@ -194,67 +175,19 @@
           </h2>
 
           <p class="card-copy">
-            Selecciona una fecha para consultar los espacios disponibles.
+            Selecciona una fecha para ver los espacios que puedes reservar.
           </p>
 
 
-          <div
-            id="available-spaces"
-            class="grid grid-3"
-          >
+          <div id="available-spaces">
 
             <div class="empty">
-              Aún no has seleccionado ninguna fecha.
+              Introduce una fecha para comenzar la búsqueda.
             </div>
 
           </div>
 
         </section>
-
-      </div>
-
-    </section>
-
-
-    <!-- CTA -->
-    <section class="section">
-
-      <div class="container">
-
-        <div class="panel panel-soft">
-
-          <span class="eyebrow">
-            ¿Ya sabes qué espacio quieres?
-          </span>
-
-          <h2>
-            Puedes solicitar tu reserva.
-          </h2>
-
-          <p class="card-copy">
-            Comprueba primero la disponibilidad y continúa después
-            con la solicitud de reserva.
-          </p>
-
-          <div class="hero-actions">
-
-            <a
-              class="button button-primary"
-              href="reservar.html"
-            >
-              Solicitar reserva
-            </a>
-
-            <a
-              class="button button-secondary"
-              href="espacios.html"
-            >
-              Ver todos los espacios
-            </a>
-
-          </div>
-
-        </div>
 
       </div>
 
