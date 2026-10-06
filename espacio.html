@@ -6,19 +6,36 @@
 
   <meta
     name="description"
-    content="Consulta toda la información, disponibilidad y condiciones del espacio."
+    content="Consulta la información, disponibilidad y condiciones de este espacio para celebraciones."
   >
 
   <title>Espacio · MiEspacioParaCelebrar</title>
 
-  <link rel="icon" href="assets/logo-placeholder.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="css/main.css">
-  <script defer src="js/app.js"></script>
+  <link
+    rel="icon"
+    href="assets/logo-placeholder.svg"
+    type="image/svg+xml"
+  >
+
+  <link
+    rel="stylesheet"
+    href="css/main.css"
+  >
+
+  <script
+    defer
+    src="js/app.js"
+  ></script>
 </head>
 
 <body>
 
+  <!-- =========================
+       CABECERA
+  ========================== -->
+
   <header class="site-header">
+
     <div class="container nav">
 
       <a
@@ -45,32 +62,43 @@
         data-nav
         aria-label="Navegación principal"
       >
-        <a data-page="espacios.html" href="espacios.html">
+
+        <a href="espacios.html">
           Espacios
         </a>
 
-        <a data-page="disponibilidad.html" href="disponibilidad.html">
+        <a href="disponibilidad.html">
           Disponibilidad
         </a>
 
-        <a data-page="reservar.html" href="reservar.html">
+        <a href="reservar.html">
           Reservar
         </a>
 
-        <a data-page="seguimiento.html" href="seguimiento.html">
+        <a href="seguimiento.html">
           Consultar
         </a>
 
-        <a data-page="acceso.html" href="acceso.html">
+        <a href="acceso.html">
           Área privada
         </a>
+
       </nav>
 
     </div>
+
   </header>
 
 
+  <!-- =========================
+       CONTENIDO
+  ========================== -->
+
   <main>
+
+    <!-- =========================
+         FICHA PRINCIPAL
+    ========================== -->
 
     <section class="section">
 
@@ -90,6 +118,7 @@
         >
 
           <!-- IMAGEN -->
+
           <div class="card">
 
             <div
@@ -103,7 +132,8 @@
           </div>
 
 
-          <!-- INFORMACIÓN PRINCIPAL -->
+          <!-- INFORMACIÓN -->
+
           <div class="panel">
 
             <span class="eyebrow">
@@ -119,53 +149,120 @@
               con comodidad y tranquilidad.
             </p>
 
-
             <div class="notice">
-              Información del espacio pendiente de conectar
-              con el catálogo real.
+
+              <strong>
+                Desde 180 €
+              </strong>
+
+              <br>
+
+              Precio orientativo. Las condiciones y servicios
+              adicionales se mostrarán antes de solicitar la reserva.
+
             </div>
 
 
+            <!-- =========================
+                 FECHAS
+            ========================== -->
+
             <div
-              class="grid grid-2"
+              class="panel-soft"
               style="margin-top: 24px;"
             >
 
-              <div>
-                <div class="card-meta">
-                  Capacidad
+              <span class="eyebrow">
+                Fechas
+              </span>
+
+              <h2>
+                ¿Cuándo quieres celebrar?
+              </h2>
+
+              <p class="card-copy">
+                Indica la fecha o el periodo que necesitas.
+              </p>
+
+
+              <form id="space-availability-form">
+
+                <div class="form-grid">
+
+                  <div class="field">
+
+                    <label for="space-start-date">
+                      Fecha de inicio
+                    </label>
+
+                    <input
+                      id="space-start-date"
+                      name="start_date"
+                      type="date"
+                      required
+                      autocomplete="off"
+                    >
+
+                  </div>
+
+
+                  <div class="field">
+
+                    <label for="space-end-date">
+                      Hasta
+                    </label>
+
+                    <input
+                      id="space-end-date"
+                      name="end_date"
+                      type="date"
+                      autocomplete="off"
+                    >
+
+                  </div>
+
                 </div>
 
-                <strong>
-                  Información pendiente
-                </strong>
-              </div>
 
+                <div class="hero-actions">
 
-              <div>
-                <div class="card-meta">
-                  Desde
+                  <button
+                    class="button button-secondary"
+                    type="submit"
+                  >
+                    Comprobar disponibilidad
+                  </button>
+
                 </div>
 
-                <strong class="price">
-                  180 €
-                </strong>
-              </div>
+              </form>
 
             </div>
 
+
+            <!-- =========================
+                 RESULTADO
+            ========================== -->
+
+            <div
+              id="space-availability-result"
+              class="notice notice-spaced"
+              aria-live="polite"
+            >
+              Selecciona las fechas para comprobar
+              la disponibilidad de este espacio.
+            </div>
+
+
+            <!-- =========================
+                 RESERVA
+            ========================== -->
 
             <div class="hero-actions">
 
               <a
+                id="space-book-button"
                 class="button button-primary"
-                href="disponibilidad.html"
-              >
-                Ver disponibilidad
-              </a>
-
-              <a
-                class="button button-secondary"
                 href="reservar.html"
               >
                 Solicitar reserva
@@ -182,7 +279,10 @@
     </section>
 
 
-    <!-- INFORMACIÓN -->
+    <!-- =========================
+         INFORMACIÓN DEL ESPACIO
+    ========================== -->
+
     <section class="section">
 
       <div class="container">
@@ -200,9 +300,8 @@
             </h2>
 
             <p class="card-copy">
-              Aquí aparecerá la descripción completa del espacio:
-              características, distribución, equipamiento y cualquier
-              otra información útil para el cliente.
+              Aquí aparecerá la descripción completa del espacio,
+              sus características, distribución y equipamiento.
             </p>
 
           </div>
@@ -219,8 +318,8 @@
             </h2>
 
             <p class="card-copy">
-              Aquí mostraremos las condiciones reales de reserva,
-              cancelación, horarios y servicios adicionales.
+              Aquí aparecerán las condiciones de uso, horarios,
+              cancelación y servicios adicionales.
             </p>
 
           </div>
@@ -232,7 +331,10 @@
     </section>
 
 
-    <!-- CTA -->
+    <!-- =========================
+         INFORMACIÓN DE RESERVA
+    ========================== -->
+
     <section class="section">
 
       <div class="container">
@@ -240,32 +342,32 @@
         <div class="panel panel-soft">
 
           <span class="eyebrow">
-            Próximo paso
+            Reserva
           </span>
 
           <h2>
-            ¿Te interesa este espacio?
+            ¿Quieres celebrar aquí tu evento?
           </h2>
 
           <p class="card-copy">
-            Consulta las fechas disponibles antes de enviar
-            tu solicitud de reserva.
+            Comprueba primero las fechas disponibles y continúa
+            con la solicitud de reserva.
           </p>
 
           <div class="hero-actions">
 
             <a
               class="button button-primary"
-              href="disponibilidad.html"
+              href="#space-availability-form"
             >
-              Consultar disponibilidad
+              Elegir fechas
             </a>
 
             <a
               class="button button-secondary"
-              href="reservar.html"
+              href="espacios.html"
             >
-              Solicitar reserva
+              Ver otros espacios
             </a>
 
           </div>
@@ -278,6 +380,10 @@
 
   </main>
 
+
+  <!-- =========================
+       PIE
+  ========================== -->
 
   <footer class="site-footer">
 
