@@ -137,7 +137,7 @@
 
     /* =========================
        SINCRONIZAR FECHA FINAL
-    ========================= */
+    ========================== */
 
     const syncEndDate = () => {
 
@@ -148,6 +148,7 @@
       if (!startValue) {
 
         endInput.value = '';
+
         endInput.min =
           todayString;
 
@@ -581,6 +582,13 @@
     spaceEndDate
   ) {
 
+    /*
+     * IMPORTANTE:
+     * El formulario de la ficha del espacio
+     * utiliza exactamente la misma lógica
+     * que el formulario general.
+     */
+
     setupDateRange({
       startInput: spaceStartDate,
       endInput: spaceEndDate
@@ -606,12 +614,22 @@
         }
 
 
+        /*
+         * Si Hasta está vacío,
+         * será igual a Inicio.
+         */
+
         if (!spaceEndDate.value) {
 
           spaceEndDate.value =
             startValue;
         }
 
+
+        /*
+         * Nunca permitir un rango
+         * anterior a la fecha de inicio.
+         */
 
         if (
           spaceEndDate.value <
@@ -624,8 +642,8 @@
 
 
         /*
-         * Obtenemos el nombre del espacio
-         * directamente de la ficha.
+         * Obtener el nombre del espacio
+         * que aparece en la ficha.
          */
 
         const spaceTitle =
@@ -641,11 +659,11 @@
 
 
         /*
-         * En esta fase todavía NO afirmamos
-         * que el espacio esté disponible.
+         * Por ahora solamente mostramos
+         * las fechas seleccionadas.
          *
-         * Eso tendrá que confirmarlo
-         * posteriormente Supabase.
+         * La comprobación real contra
+         * Supabase se añadirá después.
          */
 
         if (spaceAvailabilityResult) {
@@ -664,17 +682,17 @@
             'empty';
 
 
-          const firstLine =
+          const title =
             document.createElement(
               'strong'
             );
 
 
-          firstLine.textContent =
+          title.textContent =
             'Fechas seleccionadas';
 
           message.appendChild(
-            firstLine
+            title
           );
 
 
@@ -685,7 +703,7 @@
 
           const dateText =
             document.createTextNode(
-              startValue === spaceEndDate.value
+              spaceEndDate.value === startValue
                 ? startValue
                 : `${startValue} hasta ${spaceEndDate.value}`
             );
@@ -703,8 +721,12 @@
 
 
         /*
-         * Preparamos el enlace de reserva
-         * con el espacio y las fechas.
+         * Preparamos provisionalmente
+         * el enlace de solicitud.
+         *
+         * La disponibilidad real se
+         * conectará posteriormente con
+         * Supabase.
          */
 
         if (spaceBookButton) {
