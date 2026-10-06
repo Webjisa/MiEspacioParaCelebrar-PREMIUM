@@ -10,11 +10,11 @@
 
   if (toggle && nav) {
     toggle.addEventListener('click', () => {
-      const open = nav.classList.toggle('is-open');
+      const isOpen = nav.classList.toggle('is-open');
 
       toggle.setAttribute(
         'aria-expanded',
-        String(open)
+        String(isOpen)
       );
     });
 
@@ -35,8 +35,8 @@
      AÑO DEL FOOTER
   ========================= */
 
-  document.querySelectorAll('[data-year]').forEach((node) => {
-    node.textContent = String(new Date().getFullYear());
+  document.querySelectorAll('[data-year]').forEach((element) => {
+    element.textContent = String(new Date().getFullYear());
   });
 
 
@@ -44,41 +44,48 @@
      FECHA ACTUAL
   ========================= */
 
-  const today = new Date();
+  const now = new Date();
 
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, '0');
-  const day = String(today.getDate()).padStart(2, '0');
+  const currentYear = now.getFullYear();
+  const currentMonth = String(now.getMonth() + 1).padStart(2, '0');
+  const currentDay = String(now.getDate()).padStart(2, '0');
 
-  const todayString = `${year}-${month}-${day}`;
+  const todayString =
+    `${currentYear}-${currentMonth}-${currentDay}`;
 
 
   /* =========================
      DISPONIBILIDAD
   ========================= */
 
-  const availabilityForm = document.querySelector(
-    '#availability-form'
-  );
+  const availabilityForm =
+    document.querySelector('#availability-form');
 
-  const startDate = document.querySelector(
-    '#start-date'
-  );
+  const startDate =
+    document.querySelector('#start-date');
 
-  const endDate = document.querySelector(
-    '#end-date'
-  );
+  const endDate =
+    document.querySelector('#end-date');
+
 
   if (startDate && endDate) {
 
-    // No permitir fechas anteriores a hoy.
+    /*
+     * No permitir fechas anteriores a hoy.
+     */
     startDate.min = todayString;
     endDate.min = todayString;
 
 
-    // Al seleccionar la fecha inicial,
-    // Hasta toma automáticamente la misma fecha.
-    startDate.addEventListener('change', () => {
+    /*
+     * Mantener "Hasta" sincronizado con
+     * la fecha de inicio.
+     *
+     * Se utilizan tanto "input" como "change"
+     * porque los navegadores móviles pueden
+     * gestionar el selector de fechas de forma distinta.
+     */
+    const syncEndDate = () => {
 
       const startValue = startDate.value;
 
@@ -88,35 +95,78 @@
         return;
       }
 
+      /*
+       * La fecha final no puede ser anterior
+       * a la fecha inicial.
+       */
       endDate.min = startValue;
 
-      // Si no existe fecha final o es anterior,
-      // usamos la fecha inicial.
+      /*
+       * Al elegir una nueva fecha inicial:
+       * - si no existe fecha final → copiar inicio
+       * - si la fecha final es anterior → copiar inicio
+       */
       if (
         !endDate.value ||
         endDate.value < startValue
       ) {
         endDate.value = startValue;
+
+        /*
+         * Forzar actualización visual del
+         * campo en determinados navegadores móviles.
+         */
+        endDate.dispatchEvent(
+          new Event('change', { bubbles: true })
+        );
       }
+    };
 
-    });
+
+    startDate.addEventListener(
+      'input',
+      syncEndDate
+    );
+
+    startDate.addEventListener(
+      'change',
+      syncEndDate
+    );
 
 
-    // Evitar que el usuario deje un rango inválido.
-    endDate.addEventListener('change', () => {
+    /*
+     * Protección adicional al modificar
+     * manualmente la fecha final.
+     */
+    const validateEndDate = () => {
 
       const startValue = startDate.value;
       const endValue = endDate.value;
 
+      if (!startValue) {
+        return;
+      }
+
+      endDate.min = startValue;
+
       if (
-        startValue &&
         endValue &&
         endValue < startValue
       ) {
         endDate.value = startValue;
       }
+    };
 
-    });
+
+    endDate.addEventListener(
+      'input',
+      validateEndDate
+    );
+
+    endDate.addEventListener(
+      'change',
+      validateEndDate
+    );
 
   }
 
@@ -133,57 +183,134 @@
 
         event.preventDefault();
 
-        const results = document.querySelector(
-          '#available-spaces'
-        );
-
-        if (!results || !startDate || !endDate) {
+        if (!startDate || !endDate) {
           return;
         }
 
         const startValue = startDate.value;
         const endValue = endDate.value;
 
-        if (!startValue || !endValue) {
-          return;
-        }
-
-        if (endValue < startValue) {
-          endDate.value = startValue;
+        /*
+         * Validación básica.
+         */
+        if (!startValue) {
+          startDate.focus();
           return;
         }
 
         /*
-         * Aquí conectaremos posteriormente
-         * la consulta real a Supabase.
-         *
-         * De momento no mostramos espacios ficticios.
+         * Si por cualquier motivo no existe
+         * fecha final, usamos la inicial.
+         */
+        if (!endValue) {
+          endDate.value = startValue;
+        }
+
+        /*
+         * La fecha final nunca puede ser anterior
+         * a la fecha inicial.
+         */
+        if (endDate.value < startValue) {
+          endDate.value = startValue;
+        }
+
+
+        /* =========================
+           RESULTADOS
+        ========================= */
+
+        const results =
+          document.querySelector('#available-spaces');
+
+        if (!results) {
+          return;
+        }
+
+        /*
+         * Todavía no consultamos Supabase.
+         * Esta parte se conectará al backend
+         * cuando terminemos la estructura.
          */
 
-        results.innerHTML = `
-          <div class="empty">
-            Buscando espacios disponibles para
-            <strong>${startValue}</strong>
-            ${endValue !== startValue
-              ? ` hasta <strong>${endValue}</strong>`
-              : ''}
-          </div>
-        `;
+        results.replaceChildren();
+
+        const message = document.createElement('div');
+
+        message.className = 'empty';
+
+        const textStart =
+          document.createTextNode(
+            'Búsqueda preparada para: '
+          );
+
+        const strongStart =
+          document.createElement('strong');
+
+        strongStart.textContent = startValue;
+
+        message.appendChild(textStart);
+        message.appendChild(strongStart);
+
+        if (endDate.value !== startValue) {
+
+          message.appendChild(
+            document.createTextNode(' hasta ')
+          );
+
+          const strongEnd =
+            document.createElement('strong');
+
+          strongEnd.textContent = endDate.value;
+
+          message.appendChild(strongEnd);
+        }
+
+        results.appendChild(message);
       }
     );
 
+
+    /* =========================
+       RESET
+    ========================= */
 
     availabilityForm.addEventListener(
       'reset',
       () => {
 
+        /*
+         * Esperamos a que el navegador termine
+         * el reset nativo del formulario.
+         */
         window.setTimeout(() => {
 
-          endDate.min = todayString;
-          endDate.value = '';
+          if (startDate) {
+            startDate.min = todayString;
+          }
+
+          if (endDate) {
+            endDate.min = todayString;
+            endDate.value = '';
+          }
+
+          const results =
+            document.querySelector('#available-spaces');
+
+          if (results) {
+
+            results.replaceChildren();
+
+            const message =
+              document.createElement('div');
+
+            message.className = 'empty';
+            message.textContent =
+              'Selecciona una fecha para buscar espacios disponibles.';
+
+            results.appendChild(message);
+          }
 
         }, 0);
-
       }
     );
 
