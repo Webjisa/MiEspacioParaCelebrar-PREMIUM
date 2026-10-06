@@ -392,6 +392,7 @@ p {
 
 .card {
   overflow: hidden;
+  container-type: inline-size;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
@@ -434,9 +435,8 @@ p {
 
 .card-footer {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   padding: 0 22px 22px;
 }
 
@@ -451,8 +451,27 @@ p {
 }
 
 .card-footer .button {
-  flex: 0 1 auto;
+  flex: 0 0 auto;
   min-width: 0;
+}
+
+/*
+ * La tarjeta decide según su propio ancho.
+ *
+ * Esto evita que precio y botón se solapen
+ * cuando existen cuatro tarjetas por fila.
+ */
+@container (max-width: 310px) {
+
+  .card-footer {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .card-footer .button {
+    width: 100%;
+  }
 }
 
 /* =========================
@@ -934,17 +953,16 @@ tr:last-child td {
   }
 
   /*
-   * En móvil el precio y el botón
-   * se colocan uno debajo del otro.
+   * En móvil siempre separamos
+   * precio y botón.
    */
   .card-footer {
     display: grid;
     grid-template-columns: 1fr;
-    align-items: stretch;
+    gap: 14px;
   }
 
   .price {
-    flex: none;
     min-width: 0;
     white-space: nowrap;
   }
