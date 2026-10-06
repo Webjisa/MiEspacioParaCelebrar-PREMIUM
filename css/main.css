@@ -425,6 +425,10 @@ p {
 }
 
 .price {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  white-space: nowrap;
   color: var(--green);
   font-size: 1.05rem;
   font-weight: 900;
