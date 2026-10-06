@@ -433,23 +433,26 @@ p {
 }
 
 .card-footer {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   padding: 0 22px 22px;
 }
 
 .price {
-  min-width: max-content;
-  white-space: nowrap;
+  flex: 1 1 auto;
+  min-width: 0;
   color: var(--green);
   font-size: 1.05rem;
   font-weight: 900;
+  line-height: 1.25;
+  white-space: nowrap;
 }
 
 .card-footer .button {
-  flex-shrink: 0;
+  flex: 0 1 auto;
+  min-width: 0;
 }
 
 /* =========================
@@ -815,6 +818,7 @@ tr:last-child td {
 ========================= */
 
 @media (max-width: 1099px) {
+
   .hero-grid {
     grid-template-columns: 1fr;
     gap: 36px;
@@ -829,7 +833,9 @@ tr:last-child td {
   }
 }
 
+
 @media (max-width: 767px) {
+
   .container {
     width: min(100% - 24px, var(--container));
   }
@@ -927,9 +933,20 @@ tr:last-child td {
     padding: 19px;
   }
 
+  /*
+   * En móvil el precio y el botón
+   * se colocan uno debajo del otro.
+   */
   .card-footer {
+    display: grid;
     grid-template-columns: 1fr;
     align-items: stretch;
+  }
+
+  .price {
+    flex: none;
+    min-width: 0;
+    white-space: nowrap;
   }
 
   .card-footer .button {
