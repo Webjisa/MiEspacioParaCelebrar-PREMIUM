@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
+
   <meta
     name="viewport"
     content="width=device-width, initial-scale=1"
@@ -25,10 +26,15 @@
     href="css/main.css"
   >
 
+  <!-- Configuración pública de Supabase -->
+  <script src="supabase-config.js"></script>
+
+  <!-- Cliente Supabase -->
   <script
     src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
   ></script>
 
+  <!-- Lógica principal -->
   <script
     defer
     src="js/app.js"
@@ -108,40 +114,61 @@
         </a>
 
 
+        <!-- =========================================
+             FICHA PRINCIPAL DEL ESPACIO
+        ========================================== -->
+
         <div class="grid grid-2 section-spaced">
 
+
+          <!-- IMAGEN -->
 
           <div class="card">
 
             <div
+              id="space-image"
               class="card-media"
-              aria-label="Imagen del espacio pendiente de incorporar"
+              aria-label="Imagen del espacio"
             >
-              Imagen del espacio
+              Cargando espacio…
             </div>
 
           </div>
 
 
+          <!-- INFORMACIÓN -->
+
           <div class="panel">
 
-            <div class="card-meta">
-              Lucena
+            <div
+              id="space-location"
+              class="card-meta"
+            >
+              Cargando…
             </div>
 
-            <h1>
-              Espacio de ejemplo
+            <h1 id="space-name">
+              Cargando espacio…
             </h1>
 
-            <p class="card-copy">
-              Espacio pensado para reuniones, cumpleaños,
-              celebraciones familiares y otros eventos.
+            <p
+              id="space-description"
+              class="card-copy"
+            >
+              Cargando información del espacio…
             </p>
 
-            <p class="price">
-              Desde 180 €
+            <p
+              id="space-price"
+              class="price"
+            >
+              —
             </p>
 
+
+            <!-- =====================================
+                 CALENDARIO
+            ====================================== -->
 
             <div class="panel panel-soft panel-spaced">
 
@@ -325,6 +352,10 @@
         </div>
 
 
+        <!-- =========================================
+             INFORMACIÓN DEL ESPACIO
+        ========================================== -->
+
         <div class="grid grid-2 section-spaced">
 
 
@@ -335,12 +366,14 @@
             </span>
 
             <h2>
-              Un lugar para tu celebración
+              Información
             </h2>
 
-            <p class="card-copy">
-              Aquí aparecerá la información completa del espacio,
-              sus características, capacidad, servicios y condiciones.
+            <p
+              id="space-detail-description"
+              class="card-copy"
+            >
+              Cargando información del espacio…
             </p>
 
           </section>
@@ -356,10 +389,13 @@
               Información de reserva
             </h2>
 
-            <p class="card-copy">
-              Las condiciones concretas de reserva, cancelación,
-              servicios adicionales y demás información aparecerán
-              aquí cuando el espacio esté conectado al catálogo real.
+            <p
+              id="space-conditions"
+              class="card-copy"
+            >
+              Consulta la disponibilidad del espacio para las fechas
+              que necesitas. Las condiciones específicas se mostrarán
+              cuando estén configuradas para este espacio.
             </p>
 
           </section>
@@ -367,6 +403,10 @@
 
         </div>
 
+
+        <!-- =========================================
+             CTA FINAL
+        ========================================== -->
 
         <div class="panel panel-soft">
 
