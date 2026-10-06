@@ -1,742 +1,2908 @@
+'use strict';
+
 (() => {
-  'use strict';
 
-  /* =========================
-     UTILIDADES
-  ========================== */
+  /*
+   * ============================================================
+   * MiEspacioParaCelebrar
+   * app.js
+   * ============================================================
+   *
+   * Funciones principales:
+   *
+   * - Navegación móvil
+   * - Selector de fechas general
+   * - Calendario específico de cada espacio
+   * - Fechas ocupadas
+   * - Fechas retenidas
+   * - Festivos nacionales/autonómicos/locales
+   * - Vísperas de festivo
+   * - Selección de rangos
+   * - Enlace hacia reservar.html
+   *
+   * IMPORTANTE:
+   * La clave utilizada debe ser la ANON KEY pública de Supabase.
+   * Nunca debe colocarse aquí una service_role key.
+   */
 
-  const getTodayString = () => {
-    const today = new Date();
+  const SUPABASE_URL =
+    'https://hvuseljtqdgekotrsiwd.supabase.co';
+
+  const SUPABASE_ANON_KEY =
+    window.MIESPACIO_SUPABASE_ANON_KEY || '';
+
+  /*
+   * UUID real de La Nube existente en Supabase.
+   *
+   * Se utiliza únicamente como respaldo mientras las tarjetas
+   * de espacios todavía no pasan el UUID mediante ?id=...
+   */
+  const LA_NUBE_ID =
+    '340c371d-e09b-4a59-bfaa-343d7509a35c';
+
+
+  /* ============================================================
+     UTILIDADES GENERALES
+     ============================================================ */
+
+  function getTodayString() {
+
+    const now = new Date();
+
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+  }
+
+
+  function localISODate(date) {
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+  }
+
+
+  function isoFromParts(year, month, day) {
 
     return [
-      today.getFullYear(),
-      String(today.getMonth() + 1).padStart(2, '0'),
-      String(today.getDate()).padStart(2, '0')
+      String(year).padStart(4, '0'),
+      String(month).padStart(2, '0'),
+      String(day).padStart(2, '0')
     ].join('-');
-  };
+  }
 
 
-  const getUrlParameters = () => {
-    return new URLSearchParams(window.location.search);
-  };
+  function dateToParts(iso) {
+
+    const parts = String(iso || '')
+      .split('-')
+      .map(Number);
+
+    return {
+      year: parts[0],
+      month: parts[1],
+      day: parts[2]
+    };
+  }
 
 
-  const buildReservationUrl = ({
-    space,
-    start,
-    end
-  }) => {
+  function addDaysISO(iso, days) {
 
-    const params = new URLSearchParams();
+    const date = new Date(`${iso}T12:00:00`);
 
-    if (space) {
-      params.set('space', space);
+    date.setDate(date.getDate() + days);
+
+    return localISODate(date);
+  }
+
+
+  function formatDateDisplay(iso) {
+
+    if (!iso) {
+      return '';
     }
 
-    if (start) {
-      params.set('start', start);
+    const parts = iso.split('-');
+
+    if (parts.length !== 3) {
+      return '';
     }
 
-    if (end) {
-      params.set('end', end);
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  }
+
+
+  function parseDisplayDate(value) {
+
+    const clean = String(value || '')
+      .replace(/\D/g, '');
+
+    if (clean.length !== 8) {
+      return '';
     }
 
-    const query = params.toString();
+    const day = Number(clean.slice(0, 2));
+    const month = Number(clean.slice(2, 4));
+    const year = Number(clean.slice(4, 8));
 
-    return query
-      ? `reservar.html?${query}`
-      : 'reservar.html';
-  };
+    if (
+      !Number.isInteger(day) ||
+      !Number.isInteger(month) ||
+      !Number.isInteger(year)
+    ) {
+      return '';
+    }
+
+    if (month < 1 || month > 12) {
+      return '';
+    }
+
+    if (day < 1 || day > 31) {
+      return '';
+    }
+
+    const check = new Date(year, month - 1, day);
+
+    if (
+      check.getFullYear() !== year ||
+      check.getMonth() !== month - 1 ||
+      check.getDate() !== day
+    ) {
+      return '';
+    }
+
+    return isoFromParts(year, month, day);
+  }
 
 
-  /* =========================
+  function formatDateTyping(value) {
+
+    const digits = String(value || '')
+      .replace(/\D/g, '')
+      .slice(0, 8);
+
+    if (digits.length <= 2) {
+      return digits;
+    }
+
+    if (digits.length <= 4) {
+      return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+    }
+
+    return (
+      `${digits.slice(0, 2)}/` +
+      `${digits.slice(2, 4)}/` +
+      `${digits.slice(4)}`
+    );
+  }
+
+
+  function escapeHTML(value) {
+
+    return String(value ?? '')
+      .replace(/[&<>'"]/g, character => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        "'": '&#39;',
+        '"': '&quot;'
+      })[character]);
+  }
+
+
+  function dateInRange(iso, start, end) {
+
+    if (!iso || !start || !end) {
+      return false;
+    }
+
+    return iso >= start && iso <= end;
+  }
+
+
+  function rangeHasUnavailable(start, end, unavailable) {
+
+    if (!start || !end) {
+      return false;
+    }
+
+    let current =
+      new Date(`${start}T12:00:00`);
+
+    const last =
+      new Date(`${end}T12:00:00`);
+
+    while (current <= last) {
+
+      const iso = localISODate(current);
+
+      if (unavailable.has(iso)) {
+        return true;
+      }
+
+      current.setDate(current.getDate() + 1);
+    }
+
+    return false;
+  }
+
+
+  function showMessage(element, message, type = 'info') {
+
+    if (!element) {
+      return;
+    }
+
+    element.textContent = message;
+
+    element.classList.remove(
+      'notice-success',
+      'notice-error',
+      'notice-warning'
+    );
+
+    if (type === 'success') {
+      element.classList.add('notice-success');
+    }
+
+    if (type === 'error') {
+      element.classList.add('notice-error');
+    }
+
+    if (type === 'warning') {
+      element.classList.add('notice-warning');
+    }
+
+    element.hidden = false;
+  }
+
+
+  /* ============================================================
+     SUPABASE
+     ============================================================ */
+
+  function getSupabaseClient() {
+
+    if (
+      !SUPABASE_ANON_KEY ||
+      !window.supabase
+    ) {
+      return null;
+    }
+
+    try {
+
+      return window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY
+      );
+
+    } catch (error) {
+
+      console.error(
+        'Error creando el cliente de Supabase:',
+        error
+      );
+
+      return null;
+    }
+  }
+
+
+  /* ============================================================
      NAVEGACIÓN
-  ========================== */
+     ============================================================ */
 
-  const toggle =
-    document.querySelector('[data-nav-toggle]');
+  function initNavigation() {
 
-  const nav =
-    document.querySelector('[data-nav]');
+    const toggle =
+      document.querySelector('[data-nav-toggle]');
 
+    const nav =
+      document.querySelector('[data-nav]');
 
-  if (toggle && nav) {
+    if (!toggle || !nav) {
+      return;
+    }
 
     toggle.addEventListener('click', () => {
 
-      const isOpen =
-        nav.classList.toggle('is-open');
+      const expanded =
+        toggle.getAttribute('aria-expanded') === 'true';
 
       toggle.setAttribute(
         'aria-expanded',
-        String(isOpen)
+        String(!expanded)
       );
+
+      nav.classList.toggle(
+        'is-open',
+        !expanded
+      );
+
     });
 
+    nav.querySelectorAll('a').forEach(link => {
 
-    nav.addEventListener('click', (event) => {
-
-      if (
-        event.target instanceof HTMLAnchorElement
-      ) {
-
-        nav.classList.remove('is-open');
+      link.addEventListener('click', () => {
 
         toggle.setAttribute(
           'aria-expanded',
           'false'
         );
-      }
-    });
 
+        nav.classList.remove('is-open');
+
+      });
+
+    });
   }
 
 
-  /* =========================
+  /* ============================================================
      AÑO DEL FOOTER
-  ========================== */
+     ============================================================ */
 
-  document
-    .querySelectorAll('[data-year]')
-    .forEach((element) => {
+  function initFooterYear() {
 
-      element.textContent =
-        String(new Date().getFullYear());
+    document
+      .querySelectorAll('[data-year]')
+      .forEach(element => {
+
+        element.textContent =
+          new Date().getFullYear();
+
+      });
+  }
+
+
+  /* ============================================================
+     SELECTOR DE FECHAS GENERAL
+     disponibilidad.html
+     ============================================================ */
+
+  function setupNativeDateRange({
+    startInput,
+    endInput
+  }) {
+
+    if (!startInput || !endInput) {
+      return;
+    }
+
+    const today = getTodayString();
+
+    startInput.min = today;
+    endInput.min = today;
+
+    function syncEndMinimum() {
+
+      const start = startInput.value;
+
+      if (!start) {
+        endInput.min = today;
+        return;
+      }
+
+      endInput.min = start;
+
+      if (
+        !endInput.value ||
+        endInput.value < start
+      ) {
+
+        endInput.value = start;
+      }
+    }
+
+
+    startInput.addEventListener(
+      'change',
+      syncEndMinimum
+    );
+
+    startInput.addEventListener(
+      'input',
+      syncEndMinimum
+    );
+
+    startInput.addEventListener(
+      'blur',
+      syncEndMinimum
+    );
+
+    endInput.addEventListener(
+      'change',
+      () => {
+
+        const start = startInput.value;
+
+        if (
+          start &&
+          endInput.value &&
+          endInput.value < start
+        ) {
+
+          endInput.value = start;
+        }
+      }
+    );
+
+
+    /*
+     * Safari/iPhone:
+     *
+     * Cuando se abre el selector "Hasta", dejamos preparada
+     * la fecha inicial igual que "Desde".
+     */
+    ['pointerdown', 'touchstart', 'focus'].forEach(eventName => {
+
+      endInput.addEventListener(
+        eventName,
+        () => {
+
+          if (
+            startInput.value &&
+            (
+              !endInput.value ||
+              endInput.value < startInput.value
+            )
+          ) {
+
+            endInput.value =
+              startInput.value;
+
+            endInput.min =
+              startInput.value;
+          }
+
+        },
+        {
+          passive: true
+        }
+      );
 
     });
 
 
-  /* =========================
-     FECHA ACTUAL
-  ========================== */
-
-  const todayString =
-    getTodayString();
+    syncEndMinimum();
+  }
 
 
-  /* =========================================================
-     FUNCIÓN COMÚN PARA CAMPOS DE FECHA
-  ========================================================== */
+  function initGeneralAvailability() {
 
-  const setupDateRange = ({
-    startInput,
-    endInput
-  }) => {
+    const form =
+      document.querySelector('#availability-form');
+
+    if (!form) {
+      return;
+    }
+
+    const startInput =
+      document.querySelector('#start-date');
+
+    const endInput =
+      document.querySelector('#end-date');
+
+    const result =
+      document.querySelector('#availability-results');
+
+    const list =
+      document.querySelector('#available-spaces');
+
+    const resetButton =
+      form.querySelector('[type="reset"]');
+
+
+    setupNativeDateRange({
+      startInput,
+      endInput
+    });
+
+
+    form.addEventListener('submit', event => {
+
+      event.preventDefault();
+
+      const start =
+        startInput?.value || '';
+
+      const end =
+        endInput?.value || start;
+
+      if (!start) {
+
+        showMessage(
+          result,
+          'Selecciona una fecha.',
+          'error'
+        );
+
+        return;
+      }
+
+      if (end < start) {
+
+        showMessage(
+          result,
+          'La fecha final no puede ser anterior a la inicial.',
+          'error'
+        );
+
+        return;
+      }
+
+
+      if (list) {
+        list.innerHTML = '';
+      }
+
+
+      showMessage(
+        result,
+        `Búsqueda preparada para ${formatDateDisplay(start)}${
+          end !== start
+            ? ` → ${formatDateDisplay(end)}`
+            : ''
+        }.`,
+        'success'
+      );
+
+    });
+
+
+    resetButton?.addEventListener(
+      'click',
+      () => {
+
+        window.setTimeout(() => {
+
+          if (result) {
+            result.hidden = true;
+            result.textContent = '';
+          }
+
+          if (list) {
+            list.innerHTML = '';
+          }
+
+          setupNativeDateRange({
+            startInput,
+            endInput
+          });
+
+        }, 0);
+
+      }
+    );
+  }
+
+
+  /* ============================================================
+     RESOLUCIÓN DEL ESPACIO
+     ============================================================ */
+
+  function getSpaceIdFromURL() {
+
+    const params =
+      new URLSearchParams(
+        window.location.search
+      );
+
+    return (
+      params.get('id') ||
+      params.get('space') ||
+      window.MIESPACIO_SPACE_ID ||
+      LA_NUBE_ID
+    );
+  }
+
+
+  function getSpaceName() {
+
+    const heading =
+      document.querySelector('main h1');
+
+    if (!heading) {
+      return 'Espacio';
+    }
+
+    return heading.textContent.trim();
+  }
+
+
+  /* ============================================================
+     CARGA DE FECHAS OCUPADAS / RETENIDAS
+     ============================================================ */
+
+  async function getUnavailableDates(spaceId) {
+
+    const map = new Map();
+
+    const client =
+      getSupabaseClient();
+
+    if (!client || !spaceId) {
+      return map;
+    }
+
+    try {
+
+      const {
+        data,
+        error
+      } = await client.rpc(
+        'get_space_unavailable_ranges',
+        {
+          p_space_id: spaceId
+        }
+      );
+
+      if (error) {
+        throw error;
+      }
+
+
+      for (const row of data || []) {
+
+        if (
+          !row.start_date ||
+          !row.end_date
+        ) {
+          continue;
+        }
+
+        let current =
+          new Date(
+            `${row.start_date}T12:00:00`
+          );
+
+        const last =
+          new Date(
+            `${row.end_date}T12:00:00`
+          );
+
+
+        /*
+         * confirmed:
+         *   reserva confirmada
+         *   fecha bloqueada
+         *
+         * pending:
+         *   solicitud pendiente
+         */
+        const reason =
+          (
+            row.reason === 'confirmed' ||
+            row.reason === 'blocked'
+          )
+            ? 'confirmed'
+            : 'pending';
+
+
+        while (current <= last) {
+
+          const iso =
+            localISODate(current);
+
+
+          /*
+           * Si una fecha tiene simultáneamente
+           * pending y confirmed, prevalece confirmed.
+           */
+          if (
+            !map.has(iso) ||
+            reason === 'confirmed'
+          ) {
+
+            map.set(
+              iso,
+              reason
+            );
+          }
+
+
+          current.setDate(
+            current.getDate() + 1
+          );
+        }
+
+      }
+
+    } catch (error) {
+
+      console.error(
+        'No se pudieron cargar las fechas ocupadas:',
+        error
+      );
+
+    }
+
+    return map;
+  }
+
+
+  /* ============================================================
+     FESTIVOS
+     ============================================================ */
+
+  async function getHolidaysForYear(
+    client,
+    spaceId,
+    year
+  ) {
+
+    const holidays = new Map();
+
+    if (
+      !client ||
+      !spaceId ||
+      !year
+    ) {
+      return holidays;
+    }
+
+
+    try {
+
+      const {
+        data,
+        error
+      } = await client.rpc(
+        'get_public_space_holidays',
+        {
+          p_space_id: spaceId,
+          p_year: year
+        }
+      );
+
+
+      if (error) {
+        throw error;
+      }
+
+
+      for (const row of data || []) {
+
+        if (!row.holiday_date) {
+          continue;
+        }
+
+        holidays.set(
+          row.holiday_date,
+          {
+            name:
+              row.name ||
+              'Festivo'
+          }
+        );
+
+      }
+
+    } catch (error) {
+
+      console.error(
+        `No se pudieron cargar los festivos de ${year}:`,
+        error
+      );
+
+    }
+
+
+    return holidays;
+  }
+
+
+  async function loadHolidayData(
+    state,
+    year
+  ) {
+
+    const client =
+      getSupabaseClient();
+
+    if (!client) {
+      return;
+    }
+
+
+    if (
+      state.holidayYears.has(year)
+    ) {
+      return;
+    }
+
+
+    const holidays =
+      await getHolidaysForYear(
+        client,
+        state.spaceId,
+        year
+      );
+
+
+    holidays.forEach(
+      (value, iso) => {
+
+        state.holidays.set(
+          iso,
+          value
+        );
+
+      }
+    );
+
+
+    /*
+     * Víspera:
+     * un día antes de cada festivo.
+     */
+    holidays.forEach(
+      (value, iso) => {
+
+        const eve =
+          addDaysISO(
+            iso,
+            -1
+          );
+
+        /*
+         * No sustituimos un festivo existente.
+         */
+        if (
+          !state.holidays.has(eve)
+        ) {
+
+          state.eves.set(
+            eve,
+            {
+              name:
+                `Víspera de ${value.name}`
+            }
+          );
+
+        }
+
+      }
+    );
+
+
+    state.holidayYears.add(year);
+  }
+
+
+  /* ============================================================
+     ESTILOS DEL CALENDARIO
+     ============================================================ */
+
+  function injectCalendarStyles() {
+
+    if (
+      document.querySelector(
+        '#miespacio-calendar-runtime-styles'
+      )
+    ) {
+      return;
+    }
+
+
+    const style =
+      document.createElement('style');
+
+    style.id =
+      'miespacio-calendar-runtime-styles';
+
+
+    style.textContent = `
+
+      .space-calendar {
+        position: relative;
+        width: 100%;
+      }
+
+      .date-input-wrap {
+        position: relative;
+      }
+
+      .date-input-button {
+        width: 100%;
+        min-height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 14px;
+        border: 1px solid var(--line, #dfe5df);
+        border-radius: 12px;
+        background: #fff;
+        color: var(--text, #20231f);
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .date-input-button:hover {
+        border-color: var(--green-border, #a8c1af);
+      }
+
+      .date-input-button:focus-visible {
+        outline: 3px solid rgba(41, 77, 61, .16);
+        outline-offset: 2px;
+        border-color: var(--green, #294d3d);
+      }
+
+      .date-input-button span:last-child {
+        color: var(--muted, #6d756d);
+        font-size: .9rem;
+      }
+
+      .calendar-panel {
+        width: min(100%, 420px);
+        margin-top: 10px;
+        padding: 16px;
+        border: 1px solid var(--line, #dfe5df);
+        border-radius: 16px;
+        background: #fff;
+        box-shadow: 0 14px 36px rgba(24, 36, 29, .12);
+        z-index: 20;
+      }
+
+      .calendar-panel[hidden] {
+        display: none;
+      }
+
+      .calendar-head {
+        display: grid;
+        grid-template-columns: 40px 1fr 40px;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 14px;
+      }
+
+      .calendar-head strong {
+        text-align: center;
+        font-size: 1rem;
+        color: var(--text, #20231f);
+      }
+
+      .calendar-nav {
+        width: 40px;
+        height: 40px;
+        border: 1px solid var(--line, #dfe5df);
+        border-radius: 10px;
+        background: #fff;
+        color: var(--green, #294d3d);
+        font-size: 1.4rem;
+        line-height: 1;
+        cursor: pointer;
+      }
+
+      .calendar-nav:hover {
+        background: var(--surface-soft, #edf2ed);
+      }
+
+      .calendar-weekdays,
+      .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 5px;
+      }
+
+      .calendar-weekdays {
+        margin-bottom: 6px;
+      }
+
+      .calendar-weekdays span {
+        text-align: center;
+        color: var(--muted, #6d756d);
+        font-size: .76rem;
+        font-weight: 800;
+      }
+
+      .calendar-day {
+        position: relative;
+        min-width: 0;
+        aspect-ratio: 1;
+        border: 1px solid transparent;
+        border-radius: 10px;
+        background: #fff;
+        color: var(--text, #20231f);
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .calendar-day:hover:not(:disabled) {
+        border-color: var(--green-border, #a8c1af);
+        background: var(--surface-soft, #edf2ed);
+      }
+
+      .calendar-day.outside {
+        color: #c7cdc8;
+        background: transparent;
+        cursor: default;
+      }
+
+      .calendar-day:disabled {
+        cursor: not-allowed;
+      }
+
+      .calendar-day.unavailable-confirmed {
+        background: #faeded;
+        border-color: #e4aaaa;
+        color: #a84f4f;
+      }
+
+      .calendar-day.unavailable-confirmed::after {
+        content: "×";
+        position: absolute;
+        right: 4px;
+        top: 1px;
+        font-size: .72rem;
+        font-weight: 900;
+      }
+
+      .calendar-day.unavailable-pending {
+        background: #fbf1e4;
+        border-color: #e6bf8f;
+        color: #a96522;
+      }
+
+      .calendar-day.unavailable-pending::after {
+        content: "◷";
+        position: absolute;
+        right: 4px;
+        top: 1px;
+        font-size: .66rem;
+        font-weight: 900;
+      }
+
+      .calendar-day.holiday {
+        background: #edf4fb;
+        border-color: #b6cfe7;
+        color: #38658d;
+      }
+
+      .calendar-day.eve {
+        background: #f4f8fc;
+        border-color: #c8d9e9;
+        color: #52799b;
+      }
+
+      .calendar-day.selected {
+        background: #e7f0e9;
+        border-color: #7ea58c;
+        color: #294d3d;
+      }
+
+      .calendar-day.selected-start,
+      .calendar-day.selected-end {
+        box-shadow: inset 0 0 0 1px #6d967b;
+      }
+
+      .calendar-day.today {
+        text-decoration: underline;
+        text-decoration-thickness: 2px;
+        text-underline-offset: 3px;
+      }
+
+      .calendar-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 14px;
+        margin-top: 14px;
+        padding-top: 12px;
+        border-top: 1px solid var(--line, #dfe5df);
+      }
+
+      .calendar-legend-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--muted, #6d756d);
+        font-size: .76rem;
+      }
+
+      .calendar-legend-mark {
+        width: 13px;
+        height: 13px;
+        border-radius: 4px;
+        border: 1px solid transparent;
+        flex: 0 0 auto;
+      }
+
+      .legend-available {
+        background: #fff;
+        border-color: #dfe5df;
+      }
+
+      .legend-selected {
+        background: #e7f0e9;
+        border-color: #7ea58c;
+      }
+
+      .legend-confirmed {
+        background: #faeded;
+        border-color: #e4aaaa;
+      }
+
+      .legend-pending {
+        background: #fbf1e4;
+        border-color: #e6bf8f;
+      }
+
+      .legend-holiday {
+        background: #edf4fb;
+        border-color: #b6cfe7;
+      }
+
+      .legend-eve {
+        background: #f4f8fc;
+        border-color: #c8d9e9;
+      }
+
+      @media (max-width: 767px) {
+
+        .calendar-panel {
+          width: 100%;
+          padding: 12px;
+        }
+
+        .calendar-day {
+          border-radius: 8px;
+          font-size: .9rem;
+        }
+
+        .calendar-legend {
+          gap: 7px 10px;
+        }
+
+        .calendar-legend-item {
+          font-size: .7rem;
+        }
+
+      }
+
+    `;
+
+
+    document.head.appendChild(style);
+  }
+
+
+  /* ============================================================
+     CALENDARIO DEL ESPACIO
+     ============================================================ */
+
+  function createSpaceCalendarState(
+    spaceId
+  ) {
+
+    const today =
+      getTodayString();
+
+    return {
+
+      spaceId,
+
+      minDate: today,
+
+      maxDate: '',
+
+      unavailable:
+        new Map(),
+
+      holidays:
+        new Map(),
+
+      eves:
+        new Map(),
+
+      holidayYears:
+        new Set(),
+
+      start: '',
+
+      end: '',
+
+      activeTarget: 'start',
+
+      year:
+        new Date().getFullYear(),
+
+      month:
+        new Date().getMonth() + 1,
+
+      calendarOpen: false
+
+    };
+  }
+
+
+  function setSpaceDateInput(
+    id,
+    iso
+  ) {
+
+    const input =
+      document.querySelector(`#${id}`);
+
+    if (!input) {
+      return;
+    }
+
+    input.value =
+      formatDateDisplay(iso);
+
+    input.dataset.iso =
+      iso || '';
+  }
+
+
+  function getSpaceInputISO(id) {
+
+    const input =
+      document.querySelector(`#${id}`);
+
+    if (!input) {
+      return '';
+    }
+
+    return (
+      input.dataset.iso ||
+      parseDisplayDate(input.value)
+    );
+  }
+
+
+  function isDateUnavailable(
+    iso,
+    state
+  ) {
+
+    return (
+      state.unavailable.has(iso) ||
+      (
+        state.minDate &&
+        iso < state.minDate
+      ) ||
+      (
+        state.maxDate &&
+        iso > state.maxDate
+      )
+    );
+  }
+
+
+  function getDateClasses(
+    iso,
+    state
+  ) {
+
+    const classes = [
+      'calendar-day'
+    ];
+
+
+    const reason =
+      state.unavailable.get(iso);
+
+
+    if (reason === 'confirmed') {
+      classes.push(
+        'unavailable-confirmed'
+      );
+    }
+
+
+    if (reason === 'pending') {
+      classes.push(
+        'unavailable-pending'
+      );
+    }
+
+
+    if (
+      state.holidays.has(iso) &&
+      !reason
+    ) {
+
+      classes.push(
+        'holiday'
+      );
+
+    } else if (
+      state.eves.has(iso) &&
+      !reason
+    ) {
+
+      classes.push(
+        'eve'
+      );
+    }
+
+
+    if (
+      dateInRange(
+        iso,
+        state.start,
+        state.end
+      )
+    ) {
+
+      classes.push(
+        'selected'
+      );
+    }
+
+
+    if (
+      state.start &&
+      iso === state.start
+    ) {
+
+      classes.push(
+        'selected-start'
+      );
+    }
+
+
+    if (
+      state.end &&
+      iso === state.end
+    ) {
+
+      classes.push(
+        'selected-end'
+      );
+    }
+
+
+    if (
+      iso === getTodayString()
+    ) {
+
+      classes.push(
+        'today'
+      );
+    }
+
+
+    return classes;
+  }
+
+
+  function getHolidayTitle(
+    iso,
+    state
+  ) {
+
+    if (
+      state.holidays.has(iso)
+    ) {
+
+      return (
+        state.holidays.get(iso).name ||
+        'Festivo'
+      );
+    }
+
+
+    if (
+      state.eves.has(iso)
+    ) {
+
+      return (
+        state.eves.get(iso).name ||
+        'Víspera de festivo'
+      );
+    }
+
+
+    return '';
+  }
+
+
+  function renderSpaceCalendar(
+    state
+  ) {
+
+    const calendar =
+      document.querySelector(
+        '#space-calendar'
+      );
+
+    if (!calendar) {
+      return;
+    }
+
+
+    const firstDay =
+      new Date(
+        state.year,
+        state.month - 1,
+        1
+      );
+
+
+    const daysInMonth =
+      new Date(
+        state.year,
+        state.month,
+        0
+      ).getDate();
+
+
+    const firstWeekday =
+      (
+        firstDay.getDay() + 6
+      ) % 7;
+
+
+    const monthLabel =
+      new Intl.DateTimeFormat(
+        'es-ES',
+        {
+          month: 'long',
+          year: 'numeric'
+        }
+      ).format(firstDay);
+
+
+    let html = '';
+
+
+    html += `
+      <div class="calendar-head">
+
+        <button
+          type="button"
+          class="calendar-nav"
+          data-calendar-prev
+          aria-label="Mes anterior"
+        >
+          ‹
+        </button>
+
+        <strong>
+          ${escapeHTML(
+            monthLabel.charAt(0).toUpperCase() +
+            monthLabel.slice(1)
+          )}
+        </strong>
+
+        <button
+          type="button"
+          class="calendar-nav"
+          data-calendar-next
+          aria-label="Mes siguiente"
+        >
+          ›
+        </button>
+
+      </div>
+    `;
+
+
+    html += `
+      <div class="calendar-weekdays">
+        <span>L</span>
+        <span>M</span>
+        <span>X</span>
+        <span>J</span>
+        <span>V</span>
+        <span>S</span>
+        <span>D</span>
+      </div>
+    `;
+
+
+    html += `
+      <div class="calendar-grid">
+    `;
+
+
+    const previousMonthDays =
+      new Date(
+        state.year,
+        state.month - 1,
+        0
+      ).getDate();
+
+
+    const previousMonth =
+      state.month === 1
+        ? 12
+        : state.month - 1;
+
+
+    const previousYear =
+      state.month === 1
+        ? state.year - 1
+        : state.year;
+
+
+    for (
+      let i = 0;
+      i < firstWeekday;
+      i++
+    ) {
+
+      const day =
+        previousMonthDays -
+        firstWeekday +
+        i +
+        1;
+
+
+      const iso =
+        isoFromParts(
+          previousYear,
+          previousMonth,
+          day
+        );
+
+
+      html += `
+        <button
+          type="button"
+          class="calendar-day outside"
+          disabled
+        >
+          ${day}
+        </button>
+      `;
+    }
+
+
+    for (
+      let day = 1;
+      day <= daysInMonth;
+      day++
+    ) {
+
+      const iso =
+        isoFromParts(
+          state.year,
+          state.month,
+          day
+        );
+
+
+      const reason =
+        state.unavailable.get(iso);
+
+
+      const disabled =
+        isDateUnavailable(
+          iso,
+          state
+        );
+
+
+      const classes =
+        getDateClasses(
+          iso,
+          state
+        );
+
+
+      const title =
+        getHolidayTitle(
+          iso,
+          state
+        );
+
+
+      html += `
+        <button
+          type="button"
+          class="${classes.join(' ')}"
+          data-space-calendar-date="${iso}"
+          ${disabled ? 'disabled' : ''}
+          ${title ? `title="${escapeHTML(title)}"` : ''}
+          aria-label="${escapeHTML(
+            formatDateDisplay(iso)
+          )}${title ? `, ${escapeHTML(title)}` : ''}"
+        >
+          ${day}
+        </button>
+      `;
+    }
+
+
+    const usedCells =
+      firstWeekday +
+      daysInMonth;
+
+
+    const trailingCells =
+      (
+        7 -
+        (usedCells % 7)
+      ) % 7;
+
+
+    const nextMonth =
+      state.month === 12
+        ? 1
+        : state.month + 1;
+
+
+    const nextYear =
+      state.month === 12
+        ? state.year + 1
+        : state.year;
+
+
+    for (
+      let day = 1;
+      day <= trailingCells;
+      day++
+    ) {
+
+      html += `
+        <button
+          type="button"
+          class="calendar-day outside"
+          disabled
+        >
+          ${day}
+        </button>
+      `;
+    }
+
+
+    html += `
+      </div>
+
+      <div class="calendar-legend">
+
+        <span class="calendar-legend-item">
+          <i class="calendar-legend-mark legend-available"></i>
+          Disponible
+        </span>
+
+        <span class="calendar-legend-item">
+          <i class="calendar-legend-mark legend-selected"></i>
+          Seleccionada
+        </span>
+
+        <span class="calendar-legend-item">
+          <i class="calendar-legend-mark legend-confirmed"></i>
+          Ocupada
+        </span>
+
+        <span class="calendar-legend-item">
+          <i class="calendar-legend-mark legend-pending"></i>
+          Retenida
+        </span>
+
+        <span class="calendar-legend-item">
+          <i class="calendar-legend-mark legend-holiday"></i>
+          Festivo
+        </span>
+
+        <span class="calendar-legend-item">
+          <i class="calendar-legend-mark legend-eve"></i>
+          Víspera
+        </span>
+
+      </div>
+    `;
+
+
+    calendar.innerHTML =
+      html;
+
+
+    const previousButton =
+      calendar.querySelector(
+        '[data-calendar-prev]'
+      );
+
+
+    const nextButton =
+      calendar.querySelector(
+        '[data-calendar-next]'
+      );
+
+
+    previousButton?.addEventListener(
+      'click',
+      async event => {
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        await changeCalendarMonth(
+          state,
+          -1
+        );
+
+      }
+    );
+
+
+    nextButton?.addEventListener(
+      'click',
+      async event => {
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        await changeCalendarMonth(
+          state,
+          1
+        );
+
+      }
+    );
+  }
+
+
+  async function changeCalendarMonth(
+    state,
+    delta
+  ) {
+
+    let month =
+      state.month + delta;
+
+    let year =
+      state.year;
+
+
+    if (month < 1) {
+
+      month = 12;
+      year--;
+
+    }
+
+
+    if (month > 12) {
+
+      month = 1;
+      year++;
+
+    }
+
+
+    state.month =
+      month;
+
+    state.year =
+      year;
+
+
+    await loadHolidayData(
+      state,
+      year
+    );
+
+
+    renderSpaceCalendar(
+      state
+    );
+  }
+
+
+  function openSpaceCalendar(
+    state,
+    target
+  ) {
+
+    state.activeTarget =
+      target;
+
+
+    const inputId =
+      target === 'start'
+        ? 'space-start-date'
+        : 'space-end-date';
+
+
+    const current =
+      getSpaceInputISO(
+        inputId
+      );
+
+
+    const fallback =
+      current ||
+      state.start ||
+      state.minDate;
+
+
+    const parts =
+      dateToParts(
+        fallback
+      );
+
+
+    state.year =
+      parts.year;
+
+
+    state.month =
+      parts.month;
+
+
+    const panel =
+      document.querySelector(
+        '#space-calendar-panel'
+      );
+
+
+    if (!panel) {
+      return;
+    }
+
+
+    panel.hidden =
+      false;
+
+
+    state.calendarOpen =
+      true;
+
+
+    loadHolidayData(
+      state,
+      state.year
+    ).finally(() => {
+
+      renderSpaceCalendar(
+        state
+      );
+
+    });
+  }
+
+
+  function closeSpaceCalendar() {
+
+    const panel =
+      document.querySelector(
+        '#space-calendar-panel'
+      );
+
+
+    if (!panel) {
+      return;
+    }
+
+
+    panel.hidden =
+      true;
+  }
+
+
+  function updateReservationLink(
+    state
+  ) {
+
+    const button =
+      document.querySelector(
+        '#space-book-button'
+      );
+
+
+    if (!button) {
+      return;
+    }
+
+
+    if (
+      !state.start ||
+      !state.end
+    ) {
+
+      button.hidden =
+        true;
+
+      return;
+    }
+
+
+    const params =
+      new URLSearchParams();
+
+
+    params.set(
+      'space',
+      state.spaceId
+    );
+
+
+    params.set(
+      'start',
+      state.start
+    );
+
+
+    params.set(
+      'end',
+      state.end
+    );
+
+
+    button.href =
+      `reservar.html?${params.toString()}`;
+  }
+
+
+  function setRangeMessage(
+    state,
+    message,
+    type
+  ) {
+
+    const result =
+      document.querySelector(
+        '#space-availability-result'
+      );
+
+
+    showMessage(
+      result,
+      message,
+      type
+    );
+  }
+
+
+  function selectSpaceCalendarDate(
+    iso,
+    state
+  ) {
+
+    if (
+      isDateUnavailable(
+        iso,
+        state
+      )
+    ) {
+      return;
+    }
+
+
+    /*
+     * DESDE
+     */
+    if (
+      state.activeTarget === 'start'
+    ) {
+
+      state.start =
+        iso;
+
+
+      /*
+       * Al seleccionar Desde:
+       *
+       * Hasta = Desde
+       *
+       * Esto es exactamente lo que queremos
+       * también en iPhone.
+       */
+      state.end =
+        iso;
+
+
+      setSpaceDateInput(
+        'space-start-date',
+        state.start
+      );
+
+
+      setSpaceDateInput(
+        'space-end-date',
+        state.end
+      );
+
+
+      updateReservationLink(
+        state
+      );
+
+
+      renderSpaceCalendar(
+        state
+      );
+
+      return;
+    }
+
+
+    /*
+     * HASTA
+     */
+    if (
+      !state.start ||
+      iso < state.start
+    ) {
+
+      /*
+       * Si el usuario toca una fecha anterior
+       * mientras está seleccionando Hasta,
+       * esa fecha pasa a ser el nuevo Desde.
+       */
+      state.start =
+        iso;
+
+      state.end =
+        iso;
+
+
+      setSpaceDateInput(
+        'space-start-date',
+        state.start
+      );
+
+
+      setSpaceDateInput(
+        'space-end-date',
+        state.end
+      );
+
+
+      setRangeMessage(
+        state,
+        'La fecha seleccionada se ha establecido como inicio.',
+        'warning'
+      );
+
+
+      updateReservationLink(
+        state
+      );
+
+
+      renderSpaceCalendar(
+        state
+      );
+
+      return;
+    }
+
+
+    /*
+     * No permitimos seleccionar un rango
+     * que atraviese una fecha no disponible.
+     */
+    if (
+      rangeHasUnavailable(
+        state.start,
+        iso,
+        state.unavailable
+      )
+    ) {
+
+      state.end =
+        state.start;
+
+
+      setSpaceDateInput(
+        'space-end-date',
+        state.end
+      );
+
+
+      setRangeMessage(
+        state,
+        'El intervalo contiene una fecha ocupada o retenida. Elige otra fecha final.',
+        'error'
+      );
+
+
+      updateReservationLink(
+        state
+      );
+
+
+      renderSpaceCalendar(
+        state
+      );
+
+      return;
+    }
+
+
+    state.end =
+      iso;
+
+
+    setSpaceDateInput(
+      'space-end-date',
+      state.end
+    );
+
+
+    updateReservationLink(
+      state
+    );
+
+
+    renderSpaceCalendar(
+      state
+    );
+  }
+
+
+  async function checkSelectedSpaceAvailability(
+    state
+  ) {
+
+    if (
+      !state.start ||
+      !state.end
+    ) {
+
+      setRangeMessage(
+        state,
+        'Selecciona primero las fechas.',
+        'error'
+      );
+
+      return false;
+    }
+
+
+    if (
+      rangeHasUnavailable(
+        state.start,
+        state.end,
+        state.unavailable
+      )
+    ) {
+
+      setRangeMessage(
+        state,
+        'El intervalo seleccionado contiene una fecha ocupada o retenida.',
+        'error'
+      );
+
+      return false;
+    }
+
+
+    const client =
+      getSupabaseClient();
+
+
+    /*
+     * Sin Supabase no fingimos que la disponibilidad
+     * está comprobada en servidor.
+     */
+    if (!client) {
+
+      setRangeMessage(
+        state,
+        'No se ha podido conectar con la disponibilidad del espacio.',
+        'error'
+      );
+
+      return false;
+    }
+
+
+    try {
+
+      const {
+        data,
+        error
+      } = await client.rpc(
+        'check_space_availability',
+        {
+          p_space_id:
+            state.spaceId,
+
+          p_start_date:
+            state.start,
+
+          p_end_date:
+            state.end
+        }
+      );
+
+
+      if (error) {
+        throw error;
+      }
+
+
+      /*
+       * La función puede devolver boolean,
+       * un objeto o un resultado equivalente.
+       * Lo normalizamos de forma conservadora.
+       */
+      let available = false;
+
+
+      if (typeof data === 'boolean') {
+
+        available = data;
+
+      } else if (
+        data &&
+        typeof data === 'object'
+      ) {
+
+        if (
+          typeof data.available === 'boolean'
+        ) {
+
+          available =
+            data.available;
+
+        } else if (
+          typeof data.is_available === 'boolean'
+        ) {
+
+          available =
+            data.is_available;
+
+        } else if (
+          typeof data.result === 'boolean'
+        ) {
+
+          available =
+            data.result;
+
+        }
+
+      }
+
+
+      if (!available) {
+
+        /*
+         * Refrescamos los estados por si otra
+         * persona acaba de reservar mientras
+         * el usuario tenía el calendario abierto.
+         */
+        state.unavailable =
+          await getUnavailableDates(
+            state.spaceId
+          );
+
+
+        renderSpaceCalendar(
+          state
+        );
+
+
+        setRangeMessage(
+          state,
+          'El intervalo ya no está disponible. El calendario se ha actualizado.',
+          'error'
+        );
+
+
+        return false;
+      }
+
+
+      setRangeMessage(
+        state,
+        'Las fechas seleccionadas están disponibles.',
+        'success'
+      );
+
+
+      const button =
+        document.querySelector(
+          '#space-book-button'
+        );
+
+
+      if (button) {
+
+        button.hidden =
+          false;
+
+        button.focus({
+          preventScroll: true
+        });
+
+      }
+
+
+      return true;
+
+    } catch (error) {
+
+      console.error(
+        'Error comprobando disponibilidad:',
+        error
+      );
+
+
+      /*
+       * Si la RPC no responde, NO mostramos
+       * "disponible" porque no podemos confirmarlo.
+       */
+      setRangeMessage(
+        state,
+        'No se ha podido comprobar la disponibilidad en este momento.',
+        'error'
+      );
+
+
+      return false;
+    }
+  }
+
+
+  /* ============================================================
+     EDICIÓN MANUAL
+     ============================================================ */
+
+  function initManualSpaceDateInputs(
+    state
+  ) {
+
+    const startInput =
+      document.querySelector(
+        '#space-start-date'
+      );
+
+
+    const endInput =
+      document.querySelector(
+        '#space-end-date'
+      );
+
 
     if (!startInput || !endInput) {
       return;
     }
 
 
-    startInput.min =
-      todayString;
-
-    endInput.min =
-      todayString;
-
-
-    /* =========================
-       SINCRONIZAR FECHA FINAL
-    ========================== */
-
-    const syncEndDate = () => {
-
-      const startValue =
-        startInput.value;
-
-
-      if (!startValue) {
-
-        endInput.value = '';
-
-        endInput.min =
-          todayString;
-
-        return;
-      }
-
-
-      endInput.min =
-        startValue;
-
-
-      /*
-       * Si Hasta está vacío,
-       * debe ser exactamente igual
-       * a Fecha de inicio.
-       */
-
-      if (!endInput.value) {
-
-        endInput.value =
-          startValue;
-
-        return;
-      }
-
-
-      /*
-       * Nunca permitimos que Hasta
-       * sea anterior al inicio.
-       */
-
-      if (
-        endInput.value <
-        startValue
-      ) {
-
-        endInput.value =
-          startValue;
-      }
-
-    };
-
-
-    /* =========================
-       EVENTOS NORMALES
-    ========================== */
-
     startInput.addEventListener(
       'input',
-      syncEndDate
-    );
+      () => {
 
-    startInput.addEventListener(
-      'change',
-      syncEndDate
-    );
+        startInput.value =
+          formatDateTyping(
+            startInput.value
+          );
 
-    startInput.addEventListener(
-      'blur',
-      syncEndDate
-    );
-
-    startInput.addEventListener(
-      'focusout',
-      syncEndDate
-    );
-
-
-    /* =========================
-       SOLUCIÓN PARA IPHONE
-    ========================== */
-
-    const prepareEndDateForPicker = () => {
-
-      const startValue =
-        startInput.value;
-
-
-      if (!startValue) {
-        return;
-      }
-
-
-      endInput.min =
-        startValue;
-
-
-      /*
-       * IMPORTANTE:
-       * rellenamos el valor ANTES de que
-       * Safari abra el selector nativo.
-       */
-
-      if (!endInput.value) {
-
-        endInput.value =
-          startValue;
-      }
-
-    };
-
-
-    endInput.addEventListener(
-      'pointerdown',
-      prepareEndDateForPicker
-    );
-
-
-    endInput.addEventListener(
-      'touchstart',
-      prepareEndDateForPicker,
-      {
-        passive: true
       }
     );
-
-
-    endInput.addEventListener(
-      'focus',
-      prepareEndDateForPicker
-    );
-
-
-    /* =========================
-       VALIDAR FECHA FINAL
-    ========================== */
-
-    const validateEndDate = () => {
-
-      const startValue =
-        startInput.value;
-
-      const endValue =
-        endInput.value;
-
-
-      if (!startValue) {
-        return;
-      }
-
-
-      endInput.min =
-        startValue;
-
-
-      if (
-        !endValue ||
-        endValue < startValue
-      ) {
-
-        endInput.value =
-          startValue;
-      }
-
-    };
 
 
     endInput.addEventListener(
       'input',
-      validateEndDate
+      () => {
+
+        endInput.value =
+          formatDateTyping(
+            endInput.value
+          );
+
+      }
     );
 
-    endInput.addEventListener(
-      'change',
-      validateEndDate
+
+    startInput.addEventListener(
+      'blur',
+      () => {
+
+        const iso =
+          parseDisplayDate(
+            startInput.value
+          );
+
+
+        if (!iso) {
+          return;
+        }
+
+
+        if (
+          isDateUnavailable(
+            iso,
+            state
+          )
+        ) {
+
+          startInput.value = '';
+
+          setRangeMessage(
+            state,
+            'Esa fecha no está disponible.',
+            'error'
+          );
+
+          return;
+        }
+
+
+        state.start =
+          iso;
+
+
+        /*
+         * Igual que con el calendario:
+         * al cambiar Desde, Hasta se sincroniza
+         * inicialmente con Desde.
+         */
+        if (
+          !state.end ||
+          state.end < iso ||
+          rangeHasUnavailable(
+            iso,
+            state.end,
+            state.unavailable
+          )
+        ) {
+
+          state.end =
+            iso;
+
+          setSpaceDateInput(
+            'space-end-date',
+            iso
+          );
+        }
+
+
+        setSpaceDateInput(
+          'space-start-date',
+          iso
+        );
+
+
+        updateReservationLink(
+          state
+        );
+
+
+        renderSpaceCalendar(
+          state
+        );
+
+      }
     );
+
 
     endInput.addEventListener(
       'blur',
-      validateEndDate
+      () => {
+
+        const iso =
+          parseDisplayDate(
+            endInput.value
+          );
+
+
+        if (!iso) {
+          return;
+        }
+
+
+        if (
+          !state.start
+        ) {
+
+          state.start =
+            iso;
+
+          state.end =
+            iso;
+
+          setSpaceDateInput(
+            'space-start-date',
+            iso
+          );
+
+          setSpaceDateInput(
+            'space-end-date',
+            iso
+          );
+
+          updateReservationLink(
+            state
+          );
+
+          renderSpaceCalendar(
+            state
+          );
+
+          return;
+        }
+
+
+        if (
+          iso < state.start
+        ) {
+
+          endInput.value =
+            formatDateDisplay(
+              state.start
+            );
+
+          setRangeMessage(
+            state,
+            'La fecha final no puede ser anterior a la fecha inicial.',
+            'error'
+          );
+
+          return;
+        }
+
+
+        if (
+          rangeHasUnavailable(
+            state.start,
+            iso,
+            state.unavailable
+          )
+        ) {
+
+          endInput.value =
+            formatDateDisplay(
+              state.start
+            );
+
+          state.end =
+            state.start;
+
+
+          setRangeMessage(
+            state,
+            'El intervalo contiene una fecha ocupada o retenida.',
+            'error'
+          );
+
+          updateReservationLink(
+            state
+          );
+
+          renderSpaceCalendar(
+            state
+          );
+
+          return;
+        }
+
+
+        state.end =
+          iso;
+
+
+        setSpaceDateInput(
+          'space-end-date',
+          iso
+        );
+
+
+        updateReservationLink(
+          state
+        );
+
+
+        renderSpaceCalendar(
+          state
+        );
+
+      }
     );
 
 
-    return {
-      syncEndDate,
-      validateEndDate
-    };
+    /*
+     * Compatibilidad con Safari/iPhone.
+     */
+    ['focus', 'pointerdown', 'touchstart']
+      .forEach(eventName => {
 
-  };
+        endInput.addEventListener(
+          eventName,
+          () => {
+
+            if (
+              state.start &&
+              (
+                !state.end ||
+                state.end < state.start
+              )
+            ) {
+
+              state.end =
+                state.start;
+
+              setSpaceDateInput(
+                'space-end-date',
+                state.end
+              );
+
+            }
+
+          },
+          {
+            passive: true
+          }
+        );
+
+      });
+
+  }
 
 
-  /* =========================================================
-     DISPONIBILIDAD GENERAL
-  ========================================================== */
+  /* ============================================================
+     INICIALIZACIÓN DEL CALENDARIO DEL ESPACIO
+     ============================================================ */
 
-  const availabilityForm =
-    document.querySelector(
-      '#availability-form'
+  async function initSpaceCalendar() {
+
+    const form =
+      document.querySelector(
+        '#space-availability-form'
+      );
+
+
+    const calendar =
+      document.querySelector(
+        '#space-calendar'
+      );
+
+
+    if (!form || !calendar) {
+      return;
+    }
+
+
+    injectCalendarStyles();
+
+
+    const state =
+      createSpaceCalendarState(
+        getSpaceIdFromURL()
+      );
+
+
+    /*
+     * Cargamos primero las fechas ocupadas.
+     */
+    state.unavailable =
+      await getUnavailableDates(
+        state.spaceId
+      );
+
+
+    /*
+     * Cargamos festivos del año actual.
+     */
+    await loadHolidayData(
+      state,
+      state.year
     );
 
-  const startDate =
-    document.querySelector(
-      '#start-date'
+
+    /*
+     * Fecha inicial:
+     * hoy.
+     */
+    state.start =
+      state.minDate;
+
+    state.end =
+      state.minDate;
+
+
+    setSpaceDateInput(
+      'space-start-date',
+      state.start
     );
 
-  const endDate =
-    document.querySelector(
-      '#end-date'
+
+    setSpaceDateInput(
+      'space-end-date',
+      state.end
     );
 
 
-  if (
-    availabilityForm &&
-    startDate &&
-    endDate
-  ) {
-
-    setupDateRange({
-      startInput: startDate,
-      endInput: endDate
-    });
+    renderSpaceCalendar(
+      state
+    );
 
 
-    availabilityForm.addEventListener(
-      'submit',
-      (event) => {
+    updateReservationLink(
+      state
+    );
+
+
+    /*
+     * Botones Desde / Hasta.
+     */
+    document
+      .querySelectorAll(
+        '[data-space-calendar-target]'
+      )
+      .forEach(button => {
+
+        button.addEventListener(
+          'click',
+          event => {
+
+            event.preventDefault();
+
+            const target =
+              button.dataset
+                .spaceCalendarTarget ||
+              'start';
+
+            openSpaceCalendar(
+              state,
+              target
+            );
+
+          }
+        );
+
+      });
+
+
+    /*
+     * Clic sobre un día.
+     */
+    calendar.addEventListener(
+      'click',
+      event => {
+
+        const day =
+          event.target.closest(
+            '[data-space-calendar-date]'
+          );
+
+
+        if (
+          !day ||
+          day.disabled
+        ) {
+          return;
+        }
+
 
         event.preventDefault();
 
 
-        const startValue =
-          startDate.value;
-
-
-        if (!startValue) {
-
-          startDate.focus();
-
-          return;
-        }
-
-
-        /*
-         * Si por cualquier motivo Hasta
-         * estuviera vacío, lo completamos.
-         */
-
-        if (!endDate.value) {
-
-          endDate.value =
-            startValue;
-        }
-
-
-        /*
-         * Nunca permitir un rango inválido.
-         */
-
-        if (
-          endDate.value <
-          startValue
-        ) {
-
-          endDate.value =
-            startValue;
-        }
-
-
-        /* =========================
-           RESULTADOS TEMPORALES
-        ========================== */
-
-        const results =
-          document.querySelector(
-            '#available-spaces'
-          );
-
-
-        if (!results) {
-          return;
-        }
-
-
-        results.replaceChildren();
-
-
-        const message =
-          document.createElement('div');
-
-        message.className =
-          'empty';
-
-
-        const startText =
-          document.createTextNode(
-            'Búsqueda preparada para: '
-          );
-
-        message.appendChild(
-          startText
-        );
-
-
-        const startElement =
-          document.createElement('strong');
-
-        startElement.textContent =
-          startValue;
-
-        message.appendChild(
-          startElement
-        );
-
-
-        if (
-          endDate.value !==
-          startValue
-        ) {
-
-          message.appendChild(
-            document.createTextNode(
-              ' hasta '
-            )
-          );
-
-
-          const endElement =
-            document.createElement('strong');
-
-          endElement.textContent =
-            endDate.value;
-
-          message.appendChild(
-            endElement
-          );
-
-        }
-
-
-        results.appendChild(
-          message
+        selectSpaceCalendarDate(
+          day.dataset.spaceCalendarDate,
+          state
         );
 
       }
     );
 
 
-    /* =========================
-       LIMPIAR
-    ========================== */
+    /*
+     * Cerrar calendario al pulsar fuera.
+     */
+    document.addEventListener(
+      'click',
+      event => {
 
-    availabilityForm.addEventListener(
-      'reset',
-      () => {
-
-        window.setTimeout(() => {
-
-          startDate.min =
-            todayString;
-
-          endDate.min =
-            todayString;
-
-          endDate.value =
-            '';
+        const panel =
+          document.querySelector(
+            '#space-calendar-panel'
+          );
 
 
-          const results =
-            document.querySelector(
-              '#available-spaces'
-            );
+        if (
+          !panel ||
+          panel.hidden
+        ) {
+          return;
+        }
 
 
-          if (results) {
+        if (
+          panel.contains(event.target)
+        ) {
+          return;
+        }
 
-            results.replaceChildren();
+
+        if (
+          event.target.closest(
+            '[data-space-calendar-target]'
+          )
+        ) {
+          return;
+        }
 
 
-            const message =
-              document.createElement(
-                'div'
-              );
+        closeSpaceCalendar();
 
-            message.className =
-              'empty';
+      }
+    );
 
-            message.textContent =
-              'Selecciona una fecha para buscar espacios disponibles.';
 
-            results.appendChild(
-              message
+    /*
+     * Comprobar disponibilidad.
+     */
+    form.addEventListener(
+      'submit',
+      async event => {
+
+        event.preventDefault();
+
+        await checkSelectedSpaceAvailability(
+          state
+        );
+
+      }
+    );
+
+
+    /*
+     * Botón de reserva.
+     *
+     * No mostramos "Solicitar reserva"
+     * hasta haber comprobado disponibilidad.
+     */
+    const bookingButton =
+      document.querySelector(
+        '#space-book-button'
+      );
+
+
+    if (bookingButton) {
+
+      bookingButton.hidden =
+        true;
+
+      bookingButton.addEventListener(
+        'click',
+        event => {
+
+          if (
+            !state.start ||
+            !state.end
+          ) {
+
+            event.preventDefault();
+
+            setRangeMessage(
+              state,
+              'Selecciona las fechas antes de solicitar la reserva.',
+              'error'
             );
 
           }
 
-        }, 0);
+        }
+      );
 
-      }
+    }
+
+
+    initManualSpaceDateInputs(
+      state
     );
 
-  }
-
-
-  /* =========================================================
-     FICHA DE ESPACIO
-  ========================================================== */
-
-  const spaceAvailabilityForm =
-    document.querySelector(
-      '#space-availability-form'
-    );
-
-
-  const spaceStartDate =
-    document.querySelector(
-      '#space-start-date'
-    );
-
-
-  const spaceEndDate =
-    document.querySelector(
-      '#space-end-date'
-    );
-
-
-  const spaceAvailabilityResult =
-    document.querySelector(
-      '#space-availability-result'
-    );
-
-
-  const spaceBookButton =
-    document.querySelector(
-      '#space-book-button'
-    );
-
-
-  if (
-    spaceAvailabilityForm &&
-    spaceStartDate &&
-    spaceEndDate
-  ) {
 
     /*
-     * IMPORTANTE:
-     * El formulario de la ficha del espacio
-     * utiliza exactamente la misma lógica
-     * que el formulario general.
+     * Si el usuario pulsa Esc, cerramos el calendario.
      */
-
-    setupDateRange({
-      startInput: spaceStartDate,
-      endInput: spaceEndDate
-    });
-
-
-    spaceAvailabilityForm.addEventListener(
-      'submit',
-      (event) => {
-
-        event.preventDefault();
-
-
-        const startValue =
-          spaceStartDate.value;
-
-
-        if (!startValue) {
-
-          spaceStartDate.focus();
-
-          return;
-        }
-
-
-        /*
-         * Si Hasta está vacío,
-         * será igual a Inicio.
-         */
-
-        if (!spaceEndDate.value) {
-
-          spaceEndDate.value =
-            startValue;
-        }
-
-
-        /*
-         * Nunca permitir un rango
-         * anterior a la fecha de inicio.
-         */
+    document.addEventListener(
+      'keydown',
+      event => {
 
         if (
-          spaceEndDate.value <
-          startValue
+          event.key === 'Escape'
         ) {
 
-          spaceEndDate.value =
-            startValue;
-        }
-
-
-        /*
-         * Obtener el nombre del espacio
-         * que aparece en la ficha.
-         */
-
-        const spaceTitle =
-          document.querySelector(
-            'main h1'
-          );
-
-
-        const spaceName =
-          spaceTitle
-            ? spaceTitle.textContent.trim()
-            : '';
-
-
-        /*
-         * Por ahora solamente mostramos
-         * las fechas seleccionadas.
-         *
-         * La comprobación real contra
-         * Supabase se añadirá después.
-         */
-
-        if (spaceAvailabilityResult) {
-
-          spaceAvailabilityResult
-            .replaceChildren();
-
-
-          const message =
-            document.createElement(
-              'div'
-            );
-
-
-          message.className =
-            'empty';
-
-
-          const title =
-            document.createElement(
-              'strong'
-            );
-
-
-          title.textContent =
-            'Fechas seleccionadas';
-
-          message.appendChild(
-            title
-          );
-
-
-          message.appendChild(
-            document.createElement('br')
-          );
-
-
-          const dateText =
-            document.createTextNode(
-              spaceEndDate.value === startValue
-                ? startValue
-                : `${startValue} hasta ${spaceEndDate.value}`
-            );
-
-
-          message.appendChild(
-            dateText
-          );
-
-
-          spaceAvailabilityResult
-            .appendChild(message);
-
-        }
-
-
-        /*
-         * Preparamos provisionalmente
-         * el enlace de solicitud.
-         *
-         * La disponibilidad real se
-         * conectará posteriormente con
-         * Supabase.
-         */
-
-        if (spaceBookButton) {
-
-          spaceBookButton.href =
-            buildReservationUrl({
-              space: spaceName,
-              start: startValue,
-              end: spaceEndDate.value
-            });
+          closeSpaceCalendar();
 
         }
 
@@ -746,20 +2912,27 @@
   }
 
 
-  /* =========================================================
-     RESERVA
-  ========================================================== */
+  /* ============================================================
+     RESERVAR.HTML
+     ============================================================ */
 
-  const bookingForm =
-    document.querySelector(
-      '#booking-request-form'
-    );
+  function initBookingPage() {
+
+    const form =
+      document.querySelector(
+        '#booking-request-form'
+      );
 
 
-  if (bookingForm) {
+    if (!form) {
+      return;
+    }
+
 
     const params =
-      getUrlParameters();
+      new URLSearchParams(
+        window.location.search
+      );
 
 
     const space =
@@ -771,7 +2944,7 @@
 
 
     const end =
-      params.get('end') || '';
+      params.get('end') || start;
 
 
     const selectedSpace =
@@ -792,20 +2965,22 @@
       );
 
 
-    const bookingResult =
+    const result =
       document.querySelector(
         '#booking-request-result'
       );
 
 
-    /*
-     * Rellenar el contexto recibido.
-     */
+    const submit =
+      document.querySelector(
+        '#booking-submit'
+      );
+
 
     if (selectedSpace) {
 
       selectedSpace.value =
-        space;
+        space || 'Espacio seleccionado';
 
     }
 
@@ -813,7 +2988,7 @@
     if (selectedStart) {
 
       selectedStart.value =
-        start;
+        formatDateDisplay(start);
 
     }
 
@@ -821,90 +2996,100 @@
     if (selectedEnd) {
 
       selectedEnd.value =
-        end || start;
+        formatDateDisplay(end);
 
     }
 
 
-    /*
-     * Si falta información esencial,
-     * no permitimos enviar una solicitud
-     * incompleta.
-     */
+    if (
+      !space ||
+      !start ||
+      !end
+    ) {
 
-    const hasReservationContext =
-      Boolean(
-        space &&
-        start &&
-        (end || start)
+      if (submit) {
+        submit.disabled = true;
+      }
+
+
+      showMessage(
+        result,
+        'Faltan las fechas o el espacio seleccionado. Vuelve al espacio y realiza la selección desde allí.',
+        'error'
       );
 
 
-    if (!hasReservationContext) {
-
-      if (bookingResult) {
-
-        bookingResult.className =
-          'notice notice-spaced';
-
-        bookingResult.textContent =
-          'Para solicitar una reserva debes seleccionar primero un espacio y unas fechas.';
-
-      }
-
-
-      const submitButton =
-        document.querySelector(
-          '#booking-submit'
-        );
-
-
-      if (submitButton) {
-
-        submitButton.disabled =
-          true;
-
-      }
-
+      return;
     }
 
 
-    /* =========================
-       ENVÍO TEMPORAL
-    ========================== */
-
-    bookingForm.addEventListener(
+    form.addEventListener(
       'submit',
-      (event) => {
+      event => {
 
         event.preventDefault();
 
 
-        if (!hasReservationContext) {
-          return;
-        }
-
-
-        /*
-         * Todavía no enviamos nada a Supabase.
-         *
-         * La RPC segura de creación de
-         * solicitudes se conectará en la
-         * siguiente fase.
-         */
-
-        if (bookingResult) {
-
-          bookingResult.className =
-            'notice notice-spaced';
-
-          bookingResult.textContent =
-            'La solicitud está preparada. La conexión con Supabase se realizará en el siguiente paso.';
-
-        }
+        showMessage(
+          result,
+          'La solicitud está preparada. La conexión con Supabase se realizará en el siguiente paso.',
+          'success'
+        );
 
       }
     );
+
+  }
+
+
+  /* ============================================================
+     ESPACIO
+     ============================================================ */
+
+  async function initSpacePage() {
+
+    await initSpaceCalendar();
+
+  }
+
+
+  /* ============================================================
+     INICIO
+     ============================================================ */
+
+  async function init() {
+
+    initNavigation();
+
+    initFooterYear();
+
+    initGeneralAvailability();
+
+    initBookingPage();
+
+    await initSpacePage();
+
+  }
+
+
+  /*
+   * Esperamos a DOMContentLoaded.
+   */
+  if (
+    document.readyState === 'loading'
+  ) {
+
+    document.addEventListener(
+      'DOMContentLoaded',
+      init,
+      {
+        once: true
+      }
+    );
+
+  } else {
+
+    init();
 
   }
 
