@@ -26,6 +26,10 @@
   >
 
   <script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+  ></script>
+
+  <script
     defer
     src="js/app.js"
   ></script>
@@ -107,8 +111,6 @@
         <div class="grid grid-2 section-spaced">
 
 
-          <!-- IMAGEN DEL ESPACIO -->
-
           <div class="card">
 
             <div
@@ -120,8 +122,6 @@
 
           </div>
 
-
-          <!-- INFORMACIÓN Y DISPONIBILIDAD -->
 
           <div class="panel">
 
@@ -153,20 +153,13 @@
                 Consulta tus fechas
               </h2>
 
-              <p class="card-copy">
-                Selecciona la fecha de inicio.
-                La fecha de finalización se completará automáticamente
-                y podrás modificarla si necesitas varios días.
-              </p>
 
-
-              <form
-                id="space-availability-form"
-                novalidate
+              <div
+                id="space-calendar"
+                class="space-calendar"
               >
 
-                <div class="form-grid">
-
+                <div class="space-calendar-fields">
 
                   <div class="field">
 
@@ -174,13 +167,30 @@
                       Desde
                     </label>
 
-                    <input
-                      id="space-start-date"
-                      name="start_date"
-                      type="date"
-                      autocomplete="off"
-                      required
-                    >
+                    <div class="date-input-wrap">
+
+                      <input
+                        id="space-start-date"
+                        name="start_date"
+                        type="text"
+                        inputmode="numeric"
+                        autocomplete="off"
+                        placeholder="dd/mm/aaaa"
+                        readonly
+                        required
+                      >
+
+                      <button
+                        id="space-start-calendar-button"
+                        class="date-input-button"
+                        type="button"
+                        aria-label="Abrir calendario para la fecha de inicio"
+                        aria-expanded="false"
+                      >
+                        ▾
+                      </button>
+
+                    </div>
 
                   </div>
 
@@ -191,51 +201,120 @@
                       Hasta
                     </label>
 
-                    <input
-                      id="space-end-date"
-                      name="end_date"
-                      type="date"
-                      autocomplete="off"
-                    >
+                    <div class="date-input-wrap">
+
+                      <input
+                        id="space-end-date"
+                        name="end_date"
+                        type="text"
+                        inputmode="numeric"
+                        autocomplete="off"
+                        placeholder="dd/mm/aaaa"
+                        readonly
+                      >
+
+                      <button
+                        id="space-end-calendar-button"
+                        class="date-input-button"
+                        type="button"
+                        aria-label="Abrir calendario para la fecha de finalización"
+                        aria-expanded="false"
+                      >
+                        ▾
+                      </button>
+
+                    </div>
 
                   </div>
 
+                </div>
+
+
+                <div
+                  id="space-calendar-panel"
+                  class="calendar-panel"
+                  hidden
+                  aria-label="Calendario de disponibilidad"
+                ></div>
+
+
+                <div
+                  class="calendar-legend"
+                  aria-label="Leyenda del calendario"
+                >
+
+                  <span class="calendar-legend-item">
+                    <i class="calendar-legend-mark legend-available"></i>
+                    Disponible
+                  </span>
+
+                  <span class="calendar-legend-item">
+                    <i class="calendar-legend-mark legend-selected"></i>
+                    Seleccionada
+                  </span>
+
+                  <span class="calendar-legend-item">
+                    <i class="calendar-legend-mark legend-confirmed"></i>
+                    Ocupada
+                  </span>
+
+                  <span class="calendar-legend-item">
+                    <i class="calendar-legend-mark legend-pending"></i>
+                    Retenida
+                  </span>
+
+                  <span class="calendar-legend-item">
+                    <i class="calendar-legend-mark legend-holiday"></i>
+                    Festivo
+                  </span>
+
+                  <span class="calendar-legend-item">
+                    <i class="calendar-legend-mark legend-eve-holiday"></i>
+                    Víspera
+                  </span>
 
                 </div>
+
+
+                <form
+                  id="space-availability-form"
+                  novalidate
+                >
+
+                  <div class="form-actions">
+
+                    <button
+                      class="button button-primary"
+                      type="submit"
+                    >
+                      Comprobar disponibilidad
+                    </button>
+
+                  </div>
+
+                </form>
+
+
+                <div
+                  id="space-availability-result"
+                  class="notice"
+                  role="status"
+                  aria-live="polite"
+                ></div>
 
 
                 <div class="form-actions">
 
-                  <button
+                  <a
+                    id="space-book-button"
                     class="button button-primary"
-                    type="submit"
+                    href="reservar.html"
+                    hidden
                   >
-                    Comprobar disponibilidad
-                  </button>
+                    Solicitar reserva
+                  </a>
 
                 </div>
-
-              </form>
-
-
-              <div
-                id="space-availability-result"
-                class="notice"
-                role="status"
-                aria-live="polite"
-              ></div>
-
-
-              <div class="form-actions">
-
-                <a
-                  id="space-book-button"
-                  class="button button-primary"
-                  href="reservar.html"
-                  hidden
-                >
-                  Solicitar reserva
-                </a>
 
               </div>
 
@@ -245,8 +324,6 @@
 
         </div>
 
-
-        <!-- INFORMACIÓN DEL ESPACIO -->
 
         <div class="grid grid-2 section-spaced">
 
