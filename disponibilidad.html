@@ -6,7 +6,7 @@
 
   <meta
     name="description"
-    content="Consulta la disponibilidad de los espacios de MiEspacioParaCelebrar."
+    content="Consulta qué espacios están disponibles para la fecha de tu celebración."
   >
 
   <title>Disponibilidad · MiEspacioParaCelebrar</title>
@@ -52,6 +52,7 @@
         <a
           data-page="disponibilidad.html"
           href="disponibilidad.html"
+          aria-current="page"
         >
           Disponibilidad
         </a>
@@ -75,6 +76,7 @@
 
   <main>
 
+    <!-- BUSCADOR -->
     <section class="section">
 
       <div class="container">
@@ -84,16 +86,16 @@
           <div>
 
             <span class="eyebrow">
-              Calendario
+              Disponibilidad
             </span>
 
             <h1>
-              Consulta disponibilidad.
+              Encuentra un espacio para tu fecha.
             </h1>
 
             <p>
-              Selecciona un espacio y consulta sus fechas disponibles
-              antes de solicitar una reserva.
+              Indica la fecha de tu celebración o el periodo que necesitas
+              y te mostraremos los espacios disponibles.
             </p>
 
           </div>
@@ -101,299 +103,136 @@
         </div>
 
 
-        <div class="grid grid-2">
+        <div class="panel">
 
-          <!-- SELECTOR DE ESPACIO -->
+          <form
+            id="availability-form"
+            novalidate
+          >
 
-          <aside class="panel">
+            <div class="form-grid">
 
-            <span class="eyebrow">
-              Espacio
-            </span>
+              <div class="field">
 
-            <h2>
-              Elige un espacio
-            </h2>
+                <label for="start-date">
+                  Fecha
+                </label>
 
-            <div class="field">
+                <input
+                  id="start-date"
+                  name="start_date"
+                  type="date"
+                  required
+                  autocomplete="off"
+                >
 
-              <label for="space-select">
-                Espacio
-              </label>
+                <span class="field-help">
+                  Para una sola fecha, utiliza únicamente este campo.
+                </span>
 
-              <select id="space-select" name="space">
-                <option value="">
-                  Selecciona un espacio
-                </option>
-
-                <option value="ejemplo-1">
-                  Espacio de ejemplo
-                </option>
-
-                <option value="ejemplo-2">
-                  Otro espacio
-                </option>
-              </select>
-
-            </div>
-
-            <p class="field-help">
-              Más adelante esta lista se cargará automáticamente
-              con los espacios activos.
-            </p>
-
-            <div class="notice notice-spaced">
-              Selecciona un espacio para consultar su calendario.
-            </div>
-
-          </aside>
-
-
-          <!-- CALENDARIO -->
-
-          <section class="panel calendar-shell">
-
-            <div class="calendar-head">
-
-              <div>
-                <div class="card-meta">
-                  Espacio de ejemplo
-                </div>
-
-                <h2>
-                  Octubre 2026
-                </h2>
               </div>
 
-              <div class="calendar-nav">
 
-                <button
-                  class="button button-quiet"
-                  type="button"
-                  aria-label="Mes anterior"
-                >
-                  ←
-                </button>
+              <div class="field">
 
-                <button
-                  class="button button-quiet"
-                  type="button"
-                  aria-label="Mes siguiente"
+                <label for="end-date">
+                  Hasta
+                </label>
+
+                <input
+                  id="end-date"
+                  name="end_date"
+                  type="date"
+                  autocomplete="off"
                 >
-                  →
-                </button>
+
+                <span class="field-help">
+                  Déjalo vacío si buscas un único día.
+                </span>
 
               </div>
 
             </div>
 
 
-            <div
-              class="calendar-grid"
-              role="grid"
-              aria-label="Calendario de disponibilidad"
-            >
+            <div class="hero-actions">
 
-              <div class="calendar-weekday">L</div>
-              <div class="calendar-weekday">M</div>
-              <div class="calendar-weekday">X</div>
-              <div class="calendar-weekday">J</div>
-              <div class="calendar-weekday">V</div>
-              <div class="calendar-weekday">S</div>
-              <div class="calendar-weekday">D</div>
-
-
-              <button class="calendar-day other-month" type="button" disabled>
-                28
+              <button
+                class="button button-primary"
+                type="submit"
+              >
+                Buscar espacios disponibles
               </button>
 
-              <button class="calendar-day other-month" type="button" disabled>
-                29
-              </button>
-
-              <button class="calendar-day other-month" type="button" disabled>
-                30
-              </button>
-
-              <button class="calendar-day" type="button">
-                1
-              </button>
-
-              <button class="calendar-day" type="button">
-                2
-              </button>
-
-              <button class="calendar-day occupied" type="button" disabled>
-                3
-              </button>
-
-              <button class="calendar-day" type="button">
-                4
-              </button>
-
-
-              <button class="calendar-day" type="button">
-                5
-              </button>
-
-              <button class="calendar-day selected" type="button">
-                6
-              </button>
-
-              <button class="calendar-day selected" type="button">
-                7
-              </button>
-
-              <button class="calendar-day" type="button">
-                8
-              </button>
-
-              <button class="calendar-day held" type="button" disabled>
-                9
-              </button>
-
-              <button class="calendar-day" type="button">
-                10
-              </button>
-
-              <button class="calendar-day" type="button">
-                11
-              </button>
-
-
-              <button class="calendar-day" type="button">
-                12
-              </button>
-
-              <button class="calendar-day" type="button">
-                13
-              </button>
-
-              <button class="calendar-day occupied" type="button" disabled>
-                14
-              </button>
-
-              <button class="calendar-day" type="button">
-                15
-              </button>
-
-              <button class="calendar-day" type="button">
-                16
-              </button>
-
-              <button class="calendar-day" type="button">
-                17
-              </button>
-
-              <button class="calendar-day" type="button">
-                18
-              </button>
-
-
-              <button class="calendar-day past" type="button" disabled>
-                19
-              </button>
-
-              <button class="calendar-day past" type="button" disabled>
-                20
-              </button>
-
-              <button class="calendar-day past" type="button" disabled>
-                21
-              </button>
-
-              <button class="calendar-day" type="button">
-                22
-              </button>
-
-              <button class="calendar-day" type="button">
-                23
-              </button>
-
-              <button class="calendar-day held" type="button" disabled>
-                24
-              </button>
-
-              <button class="calendar-day" type="button">
-                25
-              </button>
-
-
-              <button class="calendar-day" type="button">
-                26
-              </button>
-
-              <button class="calendar-day" type="button">
-                27
-              </button>
-
-              <button class="calendar-day" type="button">
-                28
-              </button>
-
-              <button class="calendar-day" type="button">
-                29
-              </button>
-
-              <button class="calendar-day occupied" type="button" disabled>
-                30
-              </button>
-
-              <button class="calendar-day" type="button">
-                31
-              </button>
-
-              <button class="calendar-day other-month" type="button" disabled>
-                1
+              <button
+                class="button button-quiet"
+                type="reset"
+              >
+                Limpiar
               </button>
 
             </div>
 
-
-            <div
-              class="calendar-legend"
-              aria-label="Leyenda del calendario"
-            >
-
-              <span class="legend-item">
-                <span class="legend-mark"></span>
-                Disponible
-              </span>
-
-              <span class="legend-item">
-                <span class="legend-mark selected"></span>
-                Seleccionada
-              </span>
-
-              <span class="legend-item">
-                <span class="legend-mark occupied"></span>
-                Ocupada
-              </span>
-
-              <span class="legend-item">
-                <span class="legend-mark held"></span>
-                Retenida
-              </span>
-
-            </div>
-
-          </section>
+          </form>
 
         </div>
 
 
-        <div class="panel panel-soft panel-spaced">
+        <!-- RESULTADOS -->
+        <section
+          id="availability-results"
+          class="panel panel-spaced"
+          aria-live="polite"
+        >
 
           <span class="eyebrow">
-            Reserva
+            Resultado
           </span>
 
           <h2>
-            ¿Has encontrado tu fecha?
+            Espacios disponibles
           </h2>
 
           <p class="card-copy">
-            Una vez comprobada la disponibilidad puedes continuar
+            Selecciona una fecha para consultar los espacios disponibles.
+          </p>
+
+
+          <div
+            id="available-spaces"
+            class="grid grid-3"
+          >
+
+            <div class="empty">
+              Aún no has seleccionado ninguna fecha.
+            </div>
+
+          </div>
+
+        </section>
+
+      </div>
+
+    </section>
+
+
+    <!-- CTA -->
+    <section class="section">
+
+      <div class="container">
+
+        <div class="panel panel-soft">
+
+          <span class="eyebrow">
+            ¿Ya sabes qué espacio quieres?
+          </span>
+
+          <h2>
+            Puedes solicitar tu reserva.
+          </h2>
+
+          <p class="card-copy">
+            Comprueba primero la disponibilidad y continúa después
             con la solicitud de reserva.
           </p>
 
@@ -410,7 +249,7 @@
               class="button button-secondary"
               href="espacios.html"
             >
-              Ver espacios
+              Ver todos los espacios
             </a>
 
           </div>
