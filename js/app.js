@@ -1414,7 +1414,7 @@
 
     const calendar =
       document.querySelector(
-        '#space-calendar'
+        '#space-calendar-panel'
       );
 
     if (!calendar) {
@@ -1661,39 +1661,6 @@
     html += `
       </div>
 
-      <div class="calendar-legend">
-
-        <span class="calendar-legend-item">
-          <i class="calendar-legend-mark legend-available"></i>
-          Disponible
-        </span>
-
-        <span class="calendar-legend-item">
-          <i class="calendar-legend-mark legend-selected"></i>
-          Seleccionada
-        </span>
-
-        <span class="calendar-legend-item">
-          <i class="calendar-legend-mark legend-confirmed"></i>
-          Ocupada
-        </span>
-
-        <span class="calendar-legend-item">
-          <i class="calendar-legend-mark legend-pending"></i>
-          Retenida
-        </span>
-
-        <span class="calendar-legend-item">
-          <i class="calendar-legend-mark legend-holiday"></i>
-          Festivo
-        </span>
-
-        <span class="calendar-legend-item">
-          <i class="calendar-legend-mark legend-eve"></i>
-          Víspera
-        </span>
-
-      </div>
     `;
 
 
@@ -2654,8 +2621,13 @@
         '#space-calendar'
       );
 
+    const calendarPanel =
+      document.querySelector(
+        '#space-calendar-panel'
+      );
 
-    if (!form || !calendar) {
+
+    if (!form || !calendar || !calendarPanel) {
       return;
     }
 
@@ -2754,7 +2726,7 @@
     /*
      * Clic sobre un día.
      */
-    calendar.addEventListener(
+    calendarPanel.addEventListener(
       'click',
       event => {
 
@@ -3042,11 +3014,409 @@
   }
 
 
+
+  /* ============================================================
+     DATOS REALES DEL ESPACIO
+     ============================================================ */
+
+  function getSpaceImageUrl(row) {
+    if (!row || typeof row !== 'object') return '';
+
+    const candidates = [
+      row.image_url,
+      row.url,
+      row.public_url,
+      row.storage_url,
+      row.src
+    ];
+
+    const value = candidates.find(item =>
+      typeof item === 'string' && item.trim() !== ''
+    );
+
+    return value ? value.trim() : '';
+  }
+
+
+  async function getPublicSpace(spaceId) {
+
+    const client = getSupabaseClient();
+
+    if (!client || !spaceId) {
+      return { space: null, images: [] };
+    }
+
+    const {
+      data: space,
+      error: spaceError
+    } = await client
+      .from('spaces')
+      .select(`
+        id,
+        name,
+        city,
+        province,
+        description,
+        weekday_price,
+        friday_price,
+        saturday_price,
+        sunday_price,
+        holiday_price,
+        active,
+        admin_enabled,
+        owner_active,
+        active_from,
+        active_until
+      `)
+      .eq('id', spaceId)
+      .maybeSingle();
+
+    if (spaceError) {
+      throw spaceError;
+    }
+
+    if (!space) {
+      return { space: null, images: [] };
+    }
+
+    let images = [];
+
+    try {
+
+      const {
+        data: imageRows,
+        error: imageError
+      } = await client
+        .from('space_images')
+        .select('*')
+        .eq('space_id', spaceId);
+
+      if (!imageError) {
+        const rows = [...(imageRows || [])];
+
+        rows.sort((a, b) =>
+          Number(a?.sort_order ?? 0) -
+          Number(b?.sort_order ?? 0)
+        );
+
+        images = rows
+          .map(getSpaceImageUrl)
+          .filter(Boolean);
+      }
+
+    } catch (error) {
+
+      console.warn(
+        'No se pudieron cargar las imágenes del espacio:',
+        error
+      );
+
+    }
+
+    return {
+      space,
+      images
+    };
+  }
+
+
+  function formatEuro(value) {
+
+    const number = Number(value);
+
+    if (!Number.isFinite(number)) {
+      return '';
+    }
+
+    return new Intl.NumberFormat(
+      'es-ES',
+      {
+        style: 'currency',
+        currency: 'EUR',
+        maximumFractionDigits: 0
+      }
+    ).format(number);
+  }
+
+
+  function getStartingPrice(space) {
+
+    if (!space) {
+      return null;
+    }
+
+    const values = [
+      space.weekday_price,
+      space.friday_price,
+      space.saturday_price,
+      space.sunday_price,
+      space.holiday_price
+    ]
+      .map(Number)
+      .filter(Number.isFinite)
+      .filter(value => value >= 0);
+
+    if (!values.length) {
+      return null;
+    }
+
+    return Math.min(...values);
+  }
+
+
+  function renderSpaceDetail(space, images) {
+
+    const nameElement =
+      document.querySelector('#space-name');
+
+    const locationElement =
+      document.querySelector('#space-location');
+
+    const descriptionElement =
+      document.querySelector('#space-description');
+
+    const detailDescriptionElement =
+      document.querySelector('#space-detail-description');
+
+    const priceElement =
+      document.querySelector('#space-price');
+
+    const imageElement =
+      document.querySelector('#space-image');
+
+    if (!space) {
+
+      if (nameElement) {
+        nameElement.textContent =
+          'Espacio no encontrado';
+      }
+
+      if (locationElement) {
+        locationElement.textContent = '';
+      }
+
+      if (descriptionElement) {
+        descriptionElement.textContent =
+          'No hemos podido encontrar el espacio solicitado.';
+      }
+
+      if (detailDescriptionElement) {
+        detailDescriptionElement.textContent =
+          'El espacio que has solicitado no está disponible en el catálogo público.';
+      }
+
+      if (priceElement) {
+        priceElement.textContent = '';
+      }
+
+      if (imageElement) {
+        imageElement.textContent =
+          'Espacio no disponible';
+      }
+
+      document.title =
+        'Espacio no encontrado · MiEspacioParaCelebrar';
+
+      return;
+    }
+
+    const name =
+      space.name || 'Espacio';
+
+    const city =
+      space.city || '';
+
+    const province =
+      space.province || '';
+
+    const location =
+      [city, province]
+        .filter(Boolean)
+        .join(' · ');
+
+    const description =
+      space.description ||
+      'Este espacio todavía no tiene una descripción pública.';
+
+    if (nameElement) {
+      nameElement.textContent = name;
+    }
+
+    if (locationElement) {
+      locationElement.textContent = location;
+    }
+
+    if (descriptionElement) {
+      descriptionElement.textContent = description;
+    }
+
+    if (detailDescriptionElement) {
+      detailDescriptionElement.textContent = description;
+    }
+
+    const startingPrice =
+      getStartingPrice(space);
+
+    if (priceElement) {
+      priceElement.textContent =
+        startingPrice !== null
+          ? `Desde ${formatEuro(startingPrice)}`
+          : 'Consultar precio';
+    }
+
+    if (imageElement) {
+
+      const firstImage =
+        images?.[0] || '';
+
+      if (firstImage) {
+
+        const image =
+          document.createElement('img');
+
+        image.src = firstImage;
+        image.alt = `Imagen de ${name}`;
+        image.loading = 'eager';
+        image.decoding = 'async';
+
+        imageElement.replaceChildren(image);
+
+      } else {
+
+        imageElement.textContent =
+          'Imagen del espacio';
+
+      }
+    }
+
+    document.title =
+      `${name} · MiEspacioParaCelebrar`;
+  }
+
+
+  async function initSpaceDetail() {
+
+    const calendar =
+      document.querySelector('#space-calendar');
+
+    if (!calendar) {
+      return;
+    }
+
+    const spaceId =
+      getSpaceIdFromURL();
+
+    const result =
+      document.querySelector(
+        '#space-availability-result'
+      );
+
+    if (!spaceId) {
+
+      renderSpaceDetail(null, []);
+
+      showMessage(
+        result,
+        'No se ha indicado qué espacio quieres consultar.',
+        'error'
+      );
+
+      return;
+    }
+
+    const client =
+      getSupabaseClient();
+
+    if (!client) {
+
+      showMessage(
+        result,
+        'No se ha podido conectar con el catálogo de espacios.',
+        'error'
+      );
+
+      return;
+    }
+
+    try {
+
+      const {
+        space,
+        images
+      } = await getPublicSpace(spaceId);
+
+      if (!space) {
+
+        renderSpaceDetail(null, []);
+
+        showMessage(
+          result,
+          'El espacio solicitado no está disponible.',
+          'error'
+        );
+
+        return;
+      }
+
+      const today = getTodayString();
+
+      const isWithinPublicationPeriod =
+        (!space.active_from || today >= space.active_from) &&
+        (!space.active_until || today <= space.active_until);
+
+      const isPublic =
+        space.active === true &&
+        space.admin_enabled !== false &&
+        space.owner_active !== false &&
+        isWithinPublicationPeriod;
+
+      if (!isPublic) {
+
+        renderSpaceDetail(null, []);
+
+        showMessage(
+          result,
+          'El espacio solicitado no está disponible.',
+          'error'
+        );
+
+        return;
+      }
+
+      renderSpaceDetail(
+        space,
+        images
+      );
+
+    } catch (error) {
+
+      console.error(
+        'Error cargando el espacio:',
+        error
+      );
+
+      renderSpaceDetail(null, []);
+
+      showMessage(
+        result,
+        'No se ha podido cargar la información del espacio.',
+        'error'
+      );
+
+    }
+  }
+
   /* ============================================================
      ESPACIO
      ============================================================ */
 
   async function initSpacePage() {
+
+    /*
+     * Primero cargamos los datos reales del espacio.
+     * Después inicializamos el calendario con el mismo UUID.
+     */
+    await initSpaceDetail();
 
     await initSpaceCalendar();
 
