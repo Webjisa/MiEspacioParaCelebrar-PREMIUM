@@ -1614,8 +1614,8 @@
         }
 
         .calendar-grid .calendar-day {
-          margin: 2px !important;
-          border-radius: 8px;
+          margin: 0 auto !important;
+          border-radius: 50% !important;
           font-size: .9rem;
         }
 
@@ -1656,6 +1656,61 @@
       }
       @media (max-width: 767px) {
         #space-calendar-panel .calendar-grid .calendar-day {
+          width: 38px !important;
+          height: 38px !important;
+          min-width: 38px !important;
+          max-width: 38px !important;
+          min-height: 38px !important;
+          max-height: 38px !important;
+          margin: 0 auto !important;
+          border-radius: 50% !important;
+        }
+      }
+    `;
+
+
+    /*
+     * Refuerzo final para el calendario GENERAL de disponibilidad.
+     *
+     * Este calendario debe utilizar exactamente la misma geometría
+     * circular que el calendario de cada espacio:
+     * 44 x 44 px en escritorio y 38 x 38 px en móvil.
+     *
+     * Se mantiene separado del resto del calendario para que ninguna
+     * regla antigua de main.css ni ninguna regla posterior pueda
+     * convertir las marcas en óvalos.
+     */
+    style.textContent += `
+      #availability-calendar-panel .calendar-grid {
+        display: grid !important;
+        grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+        column-gap: 0 !important;
+        row-gap: 0 !important;
+        overflow: visible !important;
+      }
+
+      #availability-calendar-panel .calendar-grid .calendar-day {
+        width: 44px !important;
+        height: 44px !important;
+        min-width: 44px !important;
+        max-width: 44px !important;
+        min-height: 44px !important;
+        max-height: 44px !important;
+        margin: 0 auto !important;
+        padding: 0 !important;
+        box-sizing: border-box !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border-radius: 50% !important;
+      }
+
+      #availability-calendar-panel .calendar-grid .calendar-day.selected {
+        border-radius: 50% !important;
+      }
+
+      @media (max-width: 767px) {
+        #availability-calendar-panel .calendar-grid .calendar-day {
           width: 38px !important;
           height: 38px !important;
           min-width: 38px !important;
