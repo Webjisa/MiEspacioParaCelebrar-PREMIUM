@@ -1068,10 +1068,11 @@
         color: #38658d;
       }
 
+      /* Festivo y víspera usan exactamente el mismo tratamiento visual. */
       .calendar-day.eve {
-        background: #f4f8fc;
-        border-color: #c8d9e9;
-        color: #52799b;
+        background: #edf4fb;
+        border-color: #b6cfe7;
+        color: #38658d;
       }
 
       .calendar-day.selected {
@@ -1144,8 +1145,8 @@
       }
 
       .legend-eve {
-        background: #f4f8fc;
-        border-color: #c8d9e9;
+        background: #edf4fb;
+        border-color: #b6cfe7;
       }
 
       .space-detail-image {
@@ -1182,6 +1183,11 @@
 
       .space-gallery-thumb:hover {
         border-color: var(--green-border, #a8c1af);
+      }
+
+      .space-gallery-thumb.is-active {
+        border-color: var(--green, #294d3d);
+        box-shadow: 0 0 0 2px var(--green-soft, #e7f0e9);
       }
 
       .space-gallery-thumb img {
@@ -1373,10 +1379,9 @@
       classes.push('unavailable-confirmed');
     } else if (reason === 'pending') {
       classes.push('unavailable-pending');
-    } else if (state.holidays.has(iso)) {
+    } else if (state.holidays.has(iso) || state.eves.has(iso)) {
+      /* Festivo y víspera comparten deliberadamente el mismo estado visual. */
       classes.push('holiday');
-    } else if (state.eves.has(iso)) {
-      classes.push('eve');
     }
 
     if (iso === getTodayString()) {
@@ -1676,8 +1681,7 @@
         <span class="calendar-legend-item"><i class="calendar-legend-mark legend-selected"></i>Seleccionada</span>
         <span class="calendar-legend-item"><i class="calendar-legend-mark legend-confirmed"></i>Ocupada</span>
         <span class="calendar-legend-item"><i class="calendar-legend-mark legend-pending"></i>Pendiente de confirmación</span>
-        <span class="calendar-legend-item"><i class="calendar-legend-mark legend-holiday"></i>Festivo</span>
-        <span class="calendar-legend-item"><i class="calendar-legend-mark legend-eve"></i>Víspera</span>
+        <span class="calendar-legend-item"><i class="calendar-legend-mark legend-holiday"></i>Festivo/Víspera</span>
       </div>
 
     `;
@@ -3168,28 +3172,57 @@
 
     if (galleryElement) {
       galleryElement.replaceChildren();
-      imageList.slice(1, 7).forEach((src, index) => {
+
+      /*
+       * Se muestran TODAS las imágenes publicadas del espacio.
+       * La primera es la principal y también aparece como miniatura,
+       * permitiendo volver a seleccionarla después de cambiarla.
+       */
+      imageList.forEach((src, index) => {
         const button = document.createElement('button');
         button.type = 'button';
         button.className = 'space-gallery-thumb';
-        button.setAttribute('aria-label', `Ver imagen ${index + 2} de ${name}`);
+        button.dataset.galleryIndex = String(index);
+        button.setAttribute(
+          'aria-label',
+          index === 0
+            ? `Volver a imagen principal de ${name}`
+            : `Ver imagen ${index + 1} de ${name}`
+        );
 
         const image = document.createElement('img');
         image.src = src;
-        image.alt = `${name} · imagen ${index + 2}`;
-        image.loading = 'lazy';
+        image.alt =
+          index === 0
+            ? `Imagen principal de ${name}`
+            : `${name} · imagen ${index + 1}`;
+        image.loading = index === 0 ? 'eager' : 'lazy';
         image.decoding = 'async';
 
         button.appendChild(image);
+
         button.addEventListener('click', () => {
           if (!imageElement) return;
+
           const main = document.createElement('img');
           main.src = src;
-          main.alt = `${name} · imagen ${index + 2}`;
+          main.alt =
+            index === 0
+              ? `Imagen principal de ${name}`
+              : `${name} · imagen ${index + 1}`;
           main.loading = 'eager';
           main.decoding = 'async';
           imageElement.replaceChildren(main);
+
+          galleryElement
+            .querySelectorAll('.space-gallery-thumb')
+            .forEach(item => item.classList.remove('is-active'));
+          button.classList.add('is-active');
         });
+
+        if (index === 0) {
+          button.classList.add('is-active');
+        }
 
         galleryElement.appendChild(button);
       });
