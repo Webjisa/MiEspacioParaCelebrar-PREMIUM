@@ -303,24 +303,32 @@
      * ----------------------------------------------------------
      * Obtener imágenes.
      *
-     * Se hace una consulta por espacio.
-     * Es perfectamente válido para el catálogo actual.
+     * Hacemos una única consulta para todos los espacios
+     * publicados en lugar de una consulta por cada tarjeta.
      *
-     * Más adelante, cuando tengamos el catálogo definitivo,
-     * podemos optimizarlo si el número de espacios crece mucho.
+     * Esto reduce las peticiones a Supabase y hace que el
+     * catálogo cargue mejor cuando aumente el número de espacios.
      * ----------------------------------------------------------
      */
 
     const spaces =
-      [];
+      activeSpaces.map(
+        space => ({
+          ...space,
+          images: []
+        })
+      );
 
 
-    for (
-      const space of activeSpaces
-    ) {
+    const spaceIds =
+      activeSpaces
+        .map(
+          space => space.id
+        )
+        .filter(Boolean);
 
-      let images = [];
 
+    if (spaceIds.length) {
 
       try {
 
@@ -330,11 +338,11 @@
         } = await client
           .from('space_images')
           .select(
-            'image_url,sort_order'
+            'space_id,image_url,sort_order'
           )
-          .eq(
+          .in(
             'space_id',
-            space.id
+            spaceIds
           )
           .order(
             'sort_order',
@@ -344,37 +352,79 @@
           );
 
 
-        if (
-          !imageError
-        ) {
+        if (imageError) {
 
-          images =
-            (imageData || [])
-              .map(
-                image =>
-                  image.image_url
-              )
-              .filter(Boolean);
+          console.warn(
+            'No se pudieron cargar las imágenes de los espacios:',
+            imageError
+          );
+
+        } else {
+
+          const imagesBySpace =
+            new Map();
+
+
+          (imageData || []).forEach(
+            image => {
+
+              const imageUrl =
+                typeof image?.image_url === 'string'
+                  ? image.image_url.trim()
+                  : '';
+
+
+              if (!imageUrl) {
+                return;
+              }
+
+
+              const spaceId =
+                image?.space_id;
+
+
+              if (!spaceId) {
+                return;
+              }
+
+
+              if (!imagesBySpace.has(spaceId)) {
+
+                imagesBySpace.set(
+                  spaceId,
+                  []
+                );
+
+              }
+
+
+              imagesBySpace
+                .get(spaceId)
+                .push(imageUrl);
+
+            }
+          );
+
+
+          spaces.forEach(
+            space => {
+
+              space.images =
+                imagesBySpace.get(space.id) || [];
+
+            }
+          );
 
         }
 
       } catch (imageError) {
 
         console.warn(
-          `No se pudieron cargar las imágenes de ${space.name}:`,
+          'No se pudieron cargar las imágenes de los espacios:',
           imageError
         );
 
       }
-
-
-      spaces.push({
-
-        ...space,
-
-        images
-
-      });
 
     }
 
@@ -447,18 +497,44 @@
         'async';
 
 
+      image.addEventListener(
+        'error',
+        () => {
+
+          /*
+           * Si una URL deja de ser válida, no mostramos
+           * una imagen rota: dejamos la tarjeta limpia.
+           */
+
+          media.replaceChildren();
+
+          media.setAttribute(
+            'aria-label',
+            'Imagen del espacio no disponible'
+          );
+
+        },
+        {
+          once: true
+        }
+      );
+
+
       media.replaceChildren(
         image
       );
 
     } else {
 
-      media.textContent =
-        'Imagen del espacio';
+      /*
+       * Si el espacio no tiene imagen, dejamos el área visual
+       * limpia. No inventamos una fotografía ni un texto dentro
+       * de la tarjeta.
+       */
 
       media.setAttribute(
         'aria-label',
-        'Imagen del espacio pendiente de incorporar'
+        'Imagen del espacio no disponible'
       );
 
     }
@@ -647,6 +723,11 @@
 
     link.textContent =
       'Ver espacio →';
+
+    link.setAttribute(
+      'aria-label',
+      `Ver espacio ${space.name || ''}`.trim()
+    );
 
 
     footer.appendChild(
