@@ -16,10 +16,12 @@
     <a class="brand" href="index.html" aria-label="MiEspacioParaCelebrar">
       <span class="brand-mark">MiEspacioParaCelebrar</span>
     </a>
+
     <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="main-nav">
       <span></span><span></span><span></span>
       <span class="sr-only">Abrir menú</span>
     </button>
+
     <nav id="main-nav" data-nav aria-label="Navegación principal">
       <a href="espacios.html">Espacios</a>
       <a href="disponibilidad.html">Disponibilidad</a>
@@ -35,7 +37,8 @@
 
       <div class="space-detail-grid" style="margin-top:24px;">
         <article class="card">
-          <div class="space-detail-image" id="space-image" aria-live="polite">Cargando espacio…</div>
+          <div class="space-detail-image" id="space-image" aria-live="polite">Cargando imagen…</div>
+          <div id="space-gallery" class="space-gallery" aria-label="Galería del espacio"></div>
         </article>
 
         <article class="panel">
@@ -83,25 +86,15 @@
                 aria-label="Calendario de disponibilidad"
                 hidden></div>
 
-              <div class="calendar-legend" aria-label="Leyenda del calendario">
-                <span><i class="legend-available"></i> Disponible</span>
-                <span><i class="legend-selected"></i> Seleccionada</span>
-                <span><i class="legend-occupied"></i> Ocupada</span>
-                <span><i class="legend-pending"></i> Retenida</span>
-                <span><i class="legend-holiday"></i> Festivo</span>
-                <span><i class="legend-eve"></i> Víspera</span>
-              </div>
+              <div id="space-availability-result" class="notice" hidden aria-live="polite"></div>
 
               <div class="form-actions" style="margin-top:18px;">
-                <button class="button button-primary" type="submit">Comprobar disponibilidad</button>
                 <a
                   id="space-book-button"
-                  class="button button-secondary"
+                  class="button button-primary"
                   href="reservar.html"
                   hidden>Solicitar reserva</a>
               </div>
-
-              <div id="space-availability-result" class="notice" hidden aria-live="polite"></div>
             </form>
           </div>
         </article>
@@ -122,6 +115,6 @@
   </div>
 </footer>
 
-<script src="js/app.js?v=20261007"></script>
+<script src="js/app.js?v=20261007-2"></script>
 </body>
 </html>
