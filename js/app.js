@@ -1076,13 +1076,9 @@
 
       .calendar-day.selected {
         background: #e7f0e9;
-        border-color: #7ea58c;
+        border: 1px solid #7ea58c;
         color: #294d3d;
-      }
-
-      .calendar-day.selected-start,
-      .calendar-day.selected-end {
-        box-shadow: inset 0 0 0 1px #6d967b;
+        box-shadow: none;
       }
 
       .calendar-day.today {
@@ -1106,14 +1102,20 @@
         gap: 6px;
         color: var(--muted, #6d756d);
         font-size: .76rem;
+        line-height: 1.2;
       }
 
       .calendar-legend-mark {
+        display: inline-block;
         width: 13px;
         height: 13px;
         border-radius: 4px;
         border: 1px solid transparent;
         flex: 0 0 auto;
+      }
+
+      .calendar-legend-inline {
+        margin-top: 14px;
       }
 
       .legend-available {
@@ -1144,6 +1146,61 @@
       .legend-eve {
         background: #f4f8fc;
         border-color: #c8d9e9;
+      }
+
+      .space-detail-image {
+        min-height: 360px;
+        overflow: hidden;
+        background: #eef2ee;
+        border-radius: var(--radius-md, 16px);
+      }
+
+      .space-detail-image img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        min-height: 360px;
+        object-fit: cover;
+      }
+
+      .space-gallery {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 12px;
+      }
+
+      .space-gallery-thumb {
+        padding: 0;
+        border: 1px solid var(--line, #dfe5df);
+        border-radius: 12px;
+        overflow: hidden;
+        background: #fff;
+        cursor: pointer;
+        aspect-ratio: 4 / 3;
+      }
+
+      .space-gallery-thumb:hover {
+        border-color: var(--green-border, #a8c1af);
+      }
+
+      .space-gallery-thumb img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .space-condition-row {
+        display: grid;
+        grid-template-columns: minmax(120px, .35fr) 1fr;
+        gap: 16px;
+        padding: 13px 0;
+        border-bottom: 1px solid var(--line, #dfe5df);
+      }
+
+      .space-condition-row:last-child {
+        border-bottom: 0;
       }
 
       @media (max-width: 767px) {
@@ -1236,8 +1293,14 @@
       return;
     }
 
-    input.value =
-      formatDateDisplay(iso);
+    const display =
+      iso ? formatDateDisplay(iso) : 'Selecciona una fecha';
+
+    if ('value' in input) {
+      input.value = display;
+    } else {
+      input.textContent = display;
+    }
 
     input.dataset.iso =
       iso || '';
@@ -1288,90 +1351,37 @@
       'calendar-day'
     ];
 
-
     const reason =
       state.unavailable.get(iso);
 
-
-    if (reason === 'confirmed') {
-      classes.push(
-        'unavailable-confirmed'
-      );
-    }
-
-
-    if (reason === 'pending') {
-      classes.push(
-        'unavailable-pending'
-      );
-    }
-
-
-    if (
-      state.holidays.has(iso) &&
-      !reason
-    ) {
-
-      classes.push(
-        'holiday'
-      );
-
-    } else if (
-      state.eves.has(iso) &&
-      !reason
-    ) {
-
-      classes.push(
-        'eve'
-      );
-    }
-
-
-    if (
+    const selected =
       dateInRange(
         iso,
         state.start,
         state.end
-      )
-    ) {
-
-      classes.push(
-        'selected'
       );
+
+    /*
+     * Una fecha solo muestra UN estado visual principal.
+     * Así evitamos que festivo, víspera y selección se
+     * pisen entre sí. Las fechas ocupadas/retenidas no
+     * pueden formar parte de una selección.
+     */
+    if (selected) {
+      classes.push('selected');
+    } else if (reason === 'confirmed') {
+      classes.push('unavailable-confirmed');
+    } else if (reason === 'pending') {
+      classes.push('unavailable-pending');
+    } else if (state.holidays.has(iso)) {
+      classes.push('holiday');
+    } else if (state.eves.has(iso)) {
+      classes.push('eve');
     }
 
-
-    if (
-      state.start &&
-      iso === state.start
-    ) {
-
-      classes.push(
-        'selected-start'
-      );
+    if (iso === getTodayString()) {
+      classes.push('today');
     }
-
-
-    if (
-      state.end &&
-      iso === state.end
-    ) {
-
-      classes.push(
-        'selected-end'
-      );
-    }
-
-
-    if (
-      iso === getTodayString()
-    ) {
-
-      classes.push(
-        'today'
-      );
-    }
-
 
     return classes;
   }
@@ -1661,6 +1671,15 @@
     html += `
       </div>
 
+      <div class="calendar-legend calendar-legend-inline" aria-label="Leyenda del calendario">
+        <span class="calendar-legend-item"><i class="calendar-legend-mark legend-available"></i>Disponible</span>
+        <span class="calendar-legend-item"><i class="calendar-legend-mark legend-selected"></i>Seleccionada</span>
+        <span class="calendar-legend-item"><i class="calendar-legend-mark legend-confirmed"></i>Ocupada</span>
+        <span class="calendar-legend-item"><i class="calendar-legend-mark legend-pending"></i>Pendiente de confirmación</span>
+        <span class="calendar-legend-item"><i class="calendar-legend-mark legend-holiday"></i>Festivo</span>
+        <span class="calendar-legend-item"><i class="calendar-legend-mark legend-eve"></i>Víspera</span>
+      </div>
+
     `;
 
 
@@ -1925,7 +1944,7 @@
   }
 
 
-  function selectSpaceCalendarDate(
+  async function selectSpaceCalendarDate(
     iso,
     state
   ) {
@@ -1939,86 +1958,38 @@
       return;
     }
 
-
     /*
-     * DESDE
+     * PRIMER CLIC: Desde = fecha seleccionada.
+     * Hasta se sincroniza con Desde y el siguiente clic
+     * sobre un día disponible pasa automáticamente a
+     * seleccionar Hasta.
      */
-    if (
-      state.activeTarget === 'start'
-    ) {
+    if (state.activeTarget === 'start' || !state.start) {
 
-      state.start =
-        iso;
+      state.start = iso;
+      state.end = iso;
+      state.activeTarget = 'end';
 
+      setSpaceDateInput('space-start-date', state.start);
+      setSpaceDateInput('space-end-date', state.end);
 
-      /*
-       * Al seleccionar Desde:
-       *
-       * Hasta = Desde
-       *
-       * Esto es exactamente lo que queremos
-       * también en iPhone.
-       */
-      state.end =
-        iso;
+      updateReservationLink(state);
+      renderSpaceCalendar(state);
 
-
-      setSpaceDateInput(
-        'space-start-date',
-        state.start
-      );
-
-
-      setSpaceDateInput(
-        'space-end-date',
-        state.end
-      );
-
-
-      updateReservationLink(
-        state
-      );
-
-
-      renderSpaceCalendar(
-        state
-      );
-
+      await checkSelectedSpaceAvailability(state);
       return;
     }
 
-
     /*
-     * HASTA
+     * SEGUNDO CLIC: Hasta = fecha seleccionada.
      */
-    if (
-      !state.start ||
-      iso < state.start
-    ) {
+    if (iso < state.start) {
+      state.start = iso;
+      state.end = iso;
+      state.activeTarget = 'end';
 
-      /*
-       * Si el usuario toca una fecha anterior
-       * mientras está seleccionando Hasta,
-       * esa fecha pasa a ser el nuevo Desde.
-       */
-      state.start =
-        iso;
-
-      state.end =
-        iso;
-
-
-      setSpaceDateInput(
-        'space-start-date',
-        state.start
-      );
-
-
-      setSpaceDateInput(
-        'space-end-date',
-        state.end
-      );
-
+      setSpaceDateInput('space-start-date', state.start);
+      setSpaceDateInput('space-end-date', state.end);
 
       setRangeMessage(
         state,
@@ -2026,24 +1997,12 @@
         'warning'
       );
 
-
-      updateReservationLink(
-        state
-      );
-
-
-      renderSpaceCalendar(
-        state
-      );
-
+      updateReservationLink(state);
+      renderSpaceCalendar(state);
+      await checkSelectedSpaceAvailability(state);
       return;
     }
 
-
-    /*
-     * No permitimos seleccionar un rango
-     * que atraviese una fecha no disponible.
-     */
     if (
       rangeHasUnavailable(
         state.start,
@@ -2051,16 +2010,10 @@
         state.unavailable
       )
     ) {
+      state.end = state.start;
+      state.activeTarget = 'end';
 
-      state.end =
-        state.start;
-
-
-      setSpaceDateInput(
-        'space-end-date',
-        state.end
-      );
-
+      setSpaceDateInput('space-end-date', state.end);
 
       setRangeMessage(
         state,
@@ -2068,38 +2021,19 @@
         'error'
       );
 
-
-      updateReservationLink(
-        state
-      );
-
-
-      renderSpaceCalendar(
-        state
-      );
-
+      updateReservationLink(state);
+      renderSpaceCalendar(state);
       return;
     }
 
+    state.end = iso;
+    state.activeTarget = 'end';
 
-    state.end =
-      iso;
+    setSpaceDateInput('space-end-date', state.end);
+    updateReservationLink(state);
+    renderSpaceCalendar(state);
 
-
-    setSpaceDateInput(
-      'space-end-date',
-      state.end
-    );
-
-
-    updateReservationLink(
-      state
-    );
-
-
-    renderSpaceCalendar(
-      state
-    );
+    await checkSelectedSpaceAvailability(state);
   }
 
 
@@ -2664,21 +2598,21 @@
      * hoy.
      */
     state.start =
-      state.minDate;
+      '';
 
     state.end =
-      state.minDate;
+      '';
 
 
     setSpaceDateInput(
       'space-start-date',
-      state.start
+      ''
     );
 
 
     setSpaceDateInput(
       'space-end-date',
-      state.end
+      ''
     );
 
 
@@ -3097,20 +3031,26 @@
         error: imageError
       } = await client
         .from('space_images')
-        .select('image_url,sort_order,url,public_url,storage_url,src')
-        .eq('space_id', spaceId);
+        .select('image_url,sort_order')
+        .eq('space_id', spaceId)
+        .order('sort_order', { ascending: true });
 
       if (!imageError) {
-        const rows = [...(imageRows || [])];
-
-        rows.sort((a, b) =>
-          Number(a?.sort_order ?? 0) -
-          Number(b?.sort_order ?? 0)
+        images = (imageRows || [])
+          .sort((a, b) =>
+            Number(a?.sort_order ?? 0) -
+            Number(b?.sort_order ?? 0)
+          )
+          .map(row => row?.image_url)
+          .filter(value =>
+            typeof value === 'string' && value.trim() !== ''
+          )
+          .map(value => value.trim());
+      } else {
+        console.warn(
+          'No se pudieron cargar las imágenes del espacio:',
+          imageError
         );
-
-        images = rows
-          .map(getSpaceImageUrl)
-          .filter(Boolean);
       }
 
     } catch (error) {
@@ -3175,131 +3115,111 @@
 
   function renderSpaceDetail(space, images) {
 
-    const nameElement =
-      document.querySelector('#space-name');
-
-    const locationElement =
-      document.querySelector('#space-location');
-
-    const descriptionElement =
-      document.querySelector('#space-description');
-
-    const detailDescriptionElement =
-      document.querySelector('#space-detail-description');
-
-    const priceElement =
-      document.querySelector('#space-price');
-
-    const imageElement =
-      document.querySelector('#space-image');
+    const nameElement = document.querySelector('#space-name');
+    const locationElement = document.querySelector('#space-location');
+    const descriptionElement = document.querySelector('#space-description');
+    const detailDescriptionElement = document.querySelector('#space-detail-description');
+    const priceElement = document.querySelector('#space-price');
+    const imageElement = document.querySelector('#space-image');
+    const galleryElement = document.querySelector('#space-gallery');
+    const conditionsElement = document.querySelector('#space-conditions');
 
     if (!space) {
-
-      if (nameElement) {
-        nameElement.textContent =
-          'Espacio no encontrado';
-      }
-
-      if (locationElement) {
-        locationElement.textContent = '';
-      }
-
-      if (descriptionElement) {
-        descriptionElement.textContent =
-          'No hemos podido encontrar el espacio solicitado.';
-      }
-
-      if (detailDescriptionElement) {
-        detailDescriptionElement.textContent =
-          'El espacio que has solicitado no está disponible en el catálogo público.';
-      }
-
-      if (priceElement) {
-        priceElement.textContent = '';
-      }
-
-      if (imageElement) {
-        imageElement.textContent =
-          'Espacio no disponible';
-      }
-
-      document.title =
-        'Espacio no encontrado · MiEspacioParaCelebrar';
-
+      if (nameElement) nameElement.textContent = 'Espacio no encontrado';
+      if (locationElement) locationElement.textContent = '';
+      if (descriptionElement) descriptionElement.textContent = 'No hemos podido encontrar el espacio solicitado.';
+      if (detailDescriptionElement) detailDescriptionElement.textContent = 'El espacio que has solicitado no está disponible en el catálogo público.';
+      if (priceElement) priceElement.textContent = '';
+      if (imageElement) imageElement.textContent = 'Espacio no disponible';
+      if (galleryElement) galleryElement.replaceChildren();
+      if (conditionsElement) conditionsElement.replaceChildren();
+      document.title = 'Espacio no encontrado · MiEspacioParaCelebrar';
       return;
     }
 
-    const name =
-      space.name || 'Espacio';
+    const name = space.name || 'Espacio';
+    const location = [space.city || '', space.province || ''].filter(Boolean).join(' · ');
+    const description = space.description || 'Este espacio todavía no tiene una descripción pública.';
+    const imageList = Array.from(new Set((images || []).filter(Boolean)));
 
-    const city =
-      space.city || '';
+    if (nameElement) nameElement.textContent = name;
+    if (locationElement) locationElement.textContent = location;
+    if (descriptionElement) descriptionElement.textContent = description;
+    if (detailDescriptionElement) detailDescriptionElement.textContent = description;
 
-    const province =
-      space.province || '';
-
-    const location =
-      [city, province]
-        .filter(Boolean)
-        .join(' · ');
-
-    const description =
-      space.description ||
-      'Este espacio todavía no tiene una descripción pública.';
-
-    if (nameElement) {
-      nameElement.textContent = name;
-    }
-
-    if (locationElement) {
-      locationElement.textContent = location;
-    }
-
-    if (descriptionElement) {
-      descriptionElement.textContent = description;
-    }
-
-    if (detailDescriptionElement) {
-      detailDescriptionElement.textContent = description;
-    }
-
-    const startingPrice =
-      getStartingPrice(space);
-
+    const startingPrice = getStartingPrice(space);
     if (priceElement) {
-      priceElement.textContent =
-        startingPrice !== null
-          ? `Desde ${formatEuro(startingPrice)}`
-          : 'Consultar precio';
+      priceElement.textContent = startingPrice !== null ? `Desde ${formatEuro(startingPrice)}` : 'Consultar precio';
     }
 
     if (imageElement) {
-
-      const firstImage =
-        images?.[0] || '';
-
+      const firstImage = imageList[0] || '';
       if (firstImage) {
-
-        const image =
-          document.createElement('img');
-
+        const image = document.createElement('img');
         image.src = firstImage;
-        image.alt = `Imagen de ${name}`;
+        image.alt = `Imagen principal de ${name}`;
         image.loading = 'eager';
         image.decoding = 'async';
-
         imageElement.replaceChildren(image);
-
       } else {
-
-        imageElement.textContent =
-          'Imagen del espacio';
-
+        imageElement.textContent = 'Imagen del espacio no disponible';
       }
     }
 
-    document.title =
-      `${name} · MiEspacioParaCelebrar`;
+    if (galleryElement) {
+      galleryElement.replaceChildren();
+      imageList.slice(1, 7).forEach((src, index) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'space-gallery-thumb';
+        button.setAttribute('aria-label', `Ver imagen ${index + 2} de ${name}`);
+
+        const image = document.createElement('img');
+        image.src = src;
+        image.alt = `${name} · imagen ${index + 2}`;
+        image.loading = 'lazy';
+        image.decoding = 'async';
+
+        button.appendChild(image);
+        button.addEventListener('click', () => {
+          if (!imageElement) return;
+          const main = document.createElement('img');
+          main.src = src;
+          main.alt = `${name} · imagen ${index + 2}`;
+          main.loading = 'eager';
+          main.decoding = 'async';
+          imageElement.replaceChildren(main);
+        });
+
+        galleryElement.appendChild(button);
+      });
+    }
+
+    if (conditionsElement) {
+      conditionsElement.replaceChildren();
+
+      const rows = [];
+      if (space.deposit != null) rows.push(['Fianza', formatEuro(space.deposit)]);
+      if (space.opening_time || space.closing_time) {
+        rows.push(['Horario', `${String(space.opening_time || '').slice(0,5)}–${String(space.closing_time || '').slice(0,5)}`]);
+      }
+      if (space.cleaning_available) rows.push(['Limpieza', space.cleaning_price != null ? `${formatEuro(space.cleaning_price)} · opcional` : 'Disponible']);
+      if (space.conditions_text) rows.push(['Condiciones', space.conditions_text]);
+      if (space.cancellation_policy) rows.push(['Cancelación', space.cancellation_policy]);
+
+      rows.forEach(([label, value]) => {
+        const row = document.createElement('div');
+        row.className = 'space-condition-row';
+        const labelEl = document.createElement('strong');
+        labelEl.textContent = label;
+        const valueEl = document.createElement('span');
+        valueEl.textContent = value;
+        row.append(labelEl, valueEl);
+        conditionsElement.appendChild(row);
+      });
+    }
+
+    document.title = `${name} · MiEspacioParaCelebrar`;
   }
 
 
