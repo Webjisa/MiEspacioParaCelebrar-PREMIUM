@@ -988,9 +988,16 @@
 
       .calendar-weekdays,
       .calendar-grid {
-        display: grid;
-        grid-template-columns: repeat(7, minmax(0, 1fr));
-        gap: 8px;
+        display: grid !important;
+        grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+        column-gap: 0 !important;
+        row-gap: 0 !important;
+      }
+
+      /* Cada día lleva su propio recuadro. El margen interior evita que
+         los bordes de dos días consecutivos se toquen o se solapen. */
+      .calendar-grid {
+        overflow: visible !important;
       }
 
       .calendar-weekdays {
@@ -1004,10 +1011,11 @@
         font-weight: 800;
       }
 
-      .calendar-day {
+      .calendar-grid .calendar-day {
         position: relative;
         min-width: 0;
-        width: 100%;
+        width: auto !important;
+        margin: 3px !important;
         aspect-ratio: 1 / 1;
         box-sizing: border-box;
         border: 1px solid transparent;
@@ -1218,7 +1226,8 @@
           padding: 12px;
         }
 
-        .calendar-day {
+        .calendar-grid .calendar-day {
+          margin: 2px !important;
           border-radius: 8px;
           font-size: .9rem;
         }
@@ -1235,6 +1244,29 @@
 
     `;
 
+
+    /* Refuerzo final: algunas hojas antiguas del proyecto también definen
+       .calendar-grid/.calendar-day. Estas reglas garantizan que el calendario
+       nuevo conserve siempre separación visible entre casillas. */
+    style.textContent += `
+      #space-calendar-panel .calendar-grid {
+        display: grid !important;
+        grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+        gap: 0 !important;
+        overflow: visible !important;
+      }
+      #space-calendar-panel .calendar-grid .calendar-day {
+        width: auto !important;
+        min-width: 0 !important;
+        margin: 3px !important;
+        box-sizing: border-box !important;
+      }
+      @media (max-width: 767px) {
+        #space-calendar-panel .calendar-grid .calendar-day {
+          margin: 2px !important;
+        }
+      }
+    `;
 
     document.head.appendChild(style);
   }
