@@ -3062,6 +3062,15 @@
         saturday_price,
         sunday_price,
         holiday_price,
+        deposit,
+        opening_time,
+        closing_time,
+        cleaning_available,
+        cleaning_price,
+        cancellation_policy,
+        conditions_text,
+        latitude,
+        longitude,
         active,
         admin_enabled,
         owner_active,
@@ -3088,7 +3097,7 @@
         error: imageError
       } = await client
         .from('space_images')
-        .select('*')
+        .select('image_url,sort_order,url,public_url,storage_url,src')
         .eq('space_id', spaceId);
 
       if (!imageError) {
