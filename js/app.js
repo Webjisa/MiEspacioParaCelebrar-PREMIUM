@@ -474,74 +474,422 @@
   }
 
 
+
+  /* ============================================================
+     CALENDARIO GENERAL DE DISPONIBILIDAD
+     ============================================================ */
+
+  function createAvailabilityCalendarState() {
+
+    const today = getTodayString();
+    const parts = dateToParts(today);
+
+    return {
+      minDate: today,
+      start: '',
+      end: '',
+      activeTarget: 'start',
+      year: parts.year,
+      month: parts.month,
+      calendarOpen: false
+    };
+  }
+
+
+  function setAvailabilityDateInput(id, iso) {
+
+    const input = document.querySelector(`#${id}`);
+
+    if (!input) {
+      return;
+    }
+
+    input.value = iso || '';
+    input.dataset.iso = iso || '';
+
+    const display = iso
+      ? formatDateDisplay(iso)
+      : 'Selecciona una fecha';
+
+    const displayElement = document.querySelector(
+      `#${id}-display`
+    );
+
+    if (displayElement) {
+      displayElement.textContent = display;
+    }
+  }
+
+
+  function renderAvailabilityCalendar(state) {
+
+    const panel = document.querySelector(
+      '#availability-calendar-panel'
+    );
+
+    if (!panel) {
+      return;
+    }
+
+    const firstDay = new Date(
+      state.year,
+      state.month - 1,
+      1
+    );
+
+    const daysInMonth = new Date(
+      state.year,
+      state.month,
+      0
+    ).getDate();
+
+    const firstWeekday = (
+      firstDay.getDay() + 6
+    ) % 7;
+
+    const monthLabel = new Intl.DateTimeFormat(
+      'es-ES',
+      {
+        month: 'long',
+        year: 'numeric'
+      }
+    ).format(firstDay);
+
+    let html = `
+      <div class="calendar-head">
+        <button
+          type="button"
+          class="calendar-nav"
+          data-availability-calendar-prev
+          aria-label="Mes anterior"
+        >‹</button>
+        <strong>${escapeHTML(
+          monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1)
+        )}</strong>
+        <button
+          type="button"
+          class="calendar-nav"
+          data-availability-calendar-next
+          aria-label="Mes siguiente"
+        >›</button>
+      </div>
+
+      <div class="calendar-weekdays">
+        <span>L</span><span>M</span><span>X</span><span>J</span>
+        <span>V</span><span>S</span><span>D</span>
+      </div>
+
+      <div class="calendar-grid">
+    `;
+
+    const previousMonthDays = new Date(
+      state.year,
+      state.month - 1,
+      0
+    ).getDate();
+
+    const previousMonth = state.month === 1
+      ? 12
+      : state.month - 1;
+
+    const previousYear = state.month === 1
+      ? state.year - 1
+      : state.year;
+
+    for (let i = 0; i < firstWeekday; i++) {
+      const day = previousMonthDays - firstWeekday + i + 1;
+
+      html += `
+        <button
+          type="button"
+          class="calendar-day outside"
+          disabled
+        >${day}</button>
+      `;
+    }
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const iso = isoFromParts(
+        state.year,
+        state.month,
+        day
+      );
+
+      const isPast = iso < state.minDate;
+      const isSelected = dateInRange(
+        iso,
+        state.start,
+        state.end
+      );
+
+      const classes = ['calendar-day'];
+
+      if (isSelected) {
+        classes.push('selected');
+      }
+
+      if (iso === getTodayString()) {
+        classes.push('today');
+      }
+
+      html += `
+        <button
+          type="button"
+          class="${classes.join(' ')}"
+          data-availability-calendar-date="${iso}"
+          ${isPast ? 'disabled' : ''}
+          aria-label="${escapeHTML(formatDateDisplay(iso))}"
+        >${day}</button>
+      `;
+    }
+
+    const usedCells = firstWeekday + daysInMonth;
+    const trailingCells = (7 - (usedCells % 7)) % 7;
+
+    for (let day = 1; day <= trailingCells; day++) {
+      html += `
+        <button
+          type="button"
+          class="calendar-day outside"
+          disabled
+        >${day}</button>
+      `;
+    }
+
+    html += `
+      </div>
+
+      <div class="calendar-legend calendar-legend-inline" aria-label="Leyenda del calendario">
+        <span class="calendar-legend-item">
+          <i class="calendar-legend-mark legend-available"></i>Disponible
+        </span>
+        <span class="calendar-legend-item">
+          <i class="calendar-legend-mark legend-selected"></i>Seleccionada
+        </span>
+      </div>
+    `;
+
+    panel.innerHTML = html;
+
+    panel.querySelector('[data-availability-calendar-prev]')?.addEventListener(
+      'click',
+      event => {
+        event.preventDefault();
+        event.stopPropagation();
+        changeAvailabilityCalendarMonth(state, -1);
+      }
+    );
+
+    panel.querySelector('[data-availability-calendar-next]')?.addEventListener(
+      'click',
+      event => {
+        event.preventDefault();
+        event.stopPropagation();
+        changeAvailabilityCalendarMonth(state, 1);
+      }
+    );
+  }
+
+
+  function changeAvailabilityCalendarMonth(state, delta) {
+
+    let month = state.month + delta;
+    let year = state.year;
+
+    if (month < 1) {
+      month = 12;
+      year--;
+    }
+
+    if (month > 12) {
+      month = 1;
+      year++;
+    }
+
+    state.month = month;
+    state.year = year;
+
+    renderAvailabilityCalendar(state);
+  }
+
+
+  function openAvailabilityCalendar(state, target) {
+
+    state.activeTarget = target;
+
+    const current = target === 'start'
+      ? state.start
+      : state.end;
+
+    const fallback = current || state.start || state.minDate;
+    const parts = dateToParts(fallback);
+
+    state.year = parts.year;
+    state.month = parts.month;
+    state.calendarOpen = true;
+
+    const panel = document.querySelector(
+      '#availability-calendar-panel'
+    );
+
+    if (!panel) {
+      return;
+    }
+
+    panel.hidden = false;
+    renderAvailabilityCalendar(state);
+  }
+
+
+  function closeAvailabilityCalendar() {
+
+    const panel = document.querySelector(
+      '#availability-calendar-panel'
+    );
+
+    if (!panel) {
+      return;
+    }
+
+    panel.hidden = true;
+  }
+
+
+  function selectAvailabilityCalendarDate(iso, state) {
+
+    if (iso < state.minDate) {
+      return;
+    }
+
+    if (state.activeTarget === 'start' || !state.start) {
+      state.start = iso;
+      state.end = iso;
+      state.activeTarget = 'end';
+    } else if (iso < state.start) {
+      state.start = iso;
+      state.end = iso;
+    } else {
+      state.end = iso;
+      state.activeTarget = 'start';
+    }
+
+    setAvailabilityDateInput('start-date', state.start);
+    setAvailabilityDateInput('end-date', state.end);
+
+    renderAvailabilityCalendar(state);
+  }
+
+
+  function initAvailabilityCalendar() {
+
+    const form = document.querySelector('#availability-form');
+    const panel = document.querySelector('#availability-calendar-panel');
+
+    if (!form || !panel) {
+      return;
+    }
+
+    injectCalendarStyles();
+
+    const state = createAvailabilityCalendarState();
+
+    const startButton = document.querySelector(
+      '#availability-start-calendar-button'
+    );
+
+    const endButton = document.querySelector(
+      '#availability-end-calendar-button'
+    );
+
+    startButton?.addEventListener('click', event => {
+      event.preventDefault();
+      openAvailabilityCalendar(state, 'start');
+    });
+
+    endButton?.addEventListener('click', event => {
+      event.preventDefault();
+      openAvailabilityCalendar(state, 'end');
+    });
+
+    panel.addEventListener('click', event => {
+      const day = event.target.closest(
+        '[data-availability-calendar-date]'
+      );
+
+      if (!day || day.disabled) {
+        return;
+      }
+
+      event.preventDefault();
+      selectAvailabilityCalendarDate(
+        day.dataset.availabilityCalendarDate,
+        state
+      );
+    });
+
+    document.addEventListener('click', event => {
+      if (panel.hidden) {
+        return;
+      }
+
+      if (panel.contains(event.target)) {
+        return;
+      }
+
+      if (
+        event.target.closest('#availability-start-calendar-button') ||
+        event.target.closest('#availability-end-calendar-button')
+      ) {
+        return;
+      }
+
+      closeAvailabilityCalendar();
+    });
+
+    setAvailabilityDateInput('start-date', '');
+    setAvailabilityDateInput('end-date', '');
+
+    return state;
+  }
+
+
   function initGeneralAvailability() {
 
-    const form =
-      document.querySelector('#availability-form');
+    const form = document.querySelector('#availability-form');
 
     if (!form) {
       return;
     }
 
-    const startInput =
-      document.querySelector('#start-date');
+    const result = document.querySelector('#availability-results');
+    const list = document.querySelector('#available-spaces');
+    const resetButton = form.querySelector('[type="reset"]');
 
-    const endInput =
-      document.querySelector('#end-date');
-
-    const result =
-      document.querySelector('#availability-results');
-
-    const list =
-      document.querySelector('#available-spaces');
-
-    const resetButton =
-      form.querySelector('[type="reset"]');
-
-
-    setupNativeDateRange({
-      startInput,
-      endInput
-    });
-
+    const availabilityCalendarState = initAvailabilityCalendar();
 
     form.addEventListener('submit', event => {
-
       event.preventDefault();
 
-      const start =
-        startInput?.value || '';
-
-      const end =
-        endInput?.value || start;
+      const start = document.querySelector('#start-date')?.value || '';
+      const end = document.querySelector('#end-date')?.value || start;
 
       if (!start) {
-
-        showMessage(
-          result,
-          'Selecciona una fecha.',
-          'error'
-        );
-
+        showMessage(result, 'Selecciona una fecha.', 'error');
         return;
       }
 
       if (end < start) {
-
         showMessage(
           result,
           'La fecha final no puede ser anterior a la inicial.',
           'error'
         );
-
         return;
       }
-
 
       if (list) {
         list.innerHTML = '';
       }
-
 
       showMessage(
         result,
@@ -552,35 +900,53 @@
         }.`,
         'success'
       );
-
     });
 
+    resetButton?.addEventListener('click', () => {
+      window.setTimeout(() => {
+        if (result) {
+          result.hidden = true;
+          result.textContent = '';
+        }
 
-    resetButton?.addEventListener(
-      'click',
-      () => {
+        if (list) {
+          list.innerHTML = '';
+        }
 
-        window.setTimeout(() => {
+        const startInput = document.querySelector('#start-date');
+        const endInput = document.querySelector('#end-date');
 
-          if (result) {
-            result.hidden = true;
-            result.textContent = '';
-          }
+        if (startInput) {
+          startInput.value = '';
+          startInput.dataset.iso = '';
+        }
 
-          if (list) {
-            list.innerHTML = '';
-          }
+        if (endInput) {
+          endInput.value = '';
+          endInput.dataset.iso = '';
+        }
 
-          setupNativeDateRange({
-            startInput,
-            endInput
-          });
+        document.querySelector('#start-date-display')?.replaceChildren(
+          document.createTextNode('Selecciona una fecha')
+        );
 
-        }, 0);
+        document.querySelector('#end-date-display')?.replaceChildren(
+          document.createTextNode('Selecciona una fecha')
+        );
 
-      }
-    );
+        availabilityCalendarState.start = '';
+        availabilityCalendarState.end = '';
+        availabilityCalendarState.activeTarget = 'start';
+        availabilityCalendarState.calendarOpen = false;
+
+        const panel = document.querySelector('#availability-calendar-panel');
+        if (panel) {
+          panel.hidden = true;
+        }
+      }, 0);
+    });
   }
+
 
 
   /* ============================================================
