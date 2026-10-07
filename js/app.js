@@ -1254,9 +1254,9 @@
     `;
 
 
-    /* Refuerzo final: algunas hojas antiguas del proyecto también definen
-       .calendar-grid/.calendar-day. Estas reglas garantizan que el calendario
-       nuevo conserve siempre separación visible entre casillas. */
+    /* Refuerzo final: las hojas antiguas del proyecto no pueden alterar
+       la forma circular de las marcas del calendario. Cada estado se dibuja
+       como un círculo real, de tamaño fijo y perfectamente centrado. */
     style.textContent += `
       #space-calendar-panel .calendar-grid {
         display: grid !important;
@@ -1265,14 +1265,27 @@
         overflow: visible !important;
       }
       #space-calendar-panel .calendar-grid .calendar-day {
-        width: auto !important;
-        min-width: 0 !important;
-        margin: 3px !important;
+        width: 44px !important;
+        height: 44px !important;
+        min-width: 44px !important;
+        max-width: 44px !important;
+        min-height: 44px !important;
+        max-height: 44px !important;
+        margin: 0 auto !important;
+        padding: 0 !important;
         box-sizing: border-box !important;
+        border-radius: 50% !important;
       }
       @media (max-width: 767px) {
         #space-calendar-panel .calendar-grid .calendar-day {
-          margin: 2px !important;
+          width: 38px !important;
+          height: 38px !important;
+          min-width: 38px !important;
+          max-width: 38px !important;
+          min-height: 38px !important;
+          max-height: 38px !important;
+          margin: 0 auto !important;
+          border-radius: 50% !important;
         }
       }
     `;
