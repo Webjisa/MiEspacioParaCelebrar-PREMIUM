@@ -990,7 +990,7 @@
       .calendar-grid {
         display: grid;
         grid-template-columns: repeat(7, minmax(0, 1fr));
-        gap: 5px;
+        gap: 8px;
       }
 
       .calendar-weekdays {
@@ -1007,7 +1007,9 @@
       .calendar-day {
         position: relative;
         min-width: 0;
-        aspect-ratio: 1;
+        width: 100%;
+        aspect-ratio: 1 / 1;
+        box-sizing: border-box;
         border: 1px solid transparent;
         border-radius: 10px;
         background: #fff;
@@ -1079,7 +1081,7 @@
         background: #e7f0e9;
         border: 1px solid #7ea58c;
         color: #294d3d;
-        box-shadow: none;
+        box-shadow: inset 0 0 0 0.5px #7ea58c;
       }
 
       .calendar-day.today {
