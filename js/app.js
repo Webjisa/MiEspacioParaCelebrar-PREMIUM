@@ -3566,11 +3566,14 @@
         form.reset();
         if (selectedStart) selectedStart.value = formatDateDisplay(start);
         if (selectedEnd) selectedEnd.value = formatDateDisplay(end);
-        if (selectedSpace && selectedSpace.value === '') selectedSpace.value = 'Solicitud enviada';
+        if (selectedSpace) selectedSpace.value = spaceRow?.name || 'Solicitud enviada';
+
+        const pendingNotice = document.querySelector('#booking-72h-notice');
+        if (pendingNotice) pendingNotice.hidden = true;
 
         showMessage(
           result,
-          'Solicitud enviada correctamente. El propietario dispone de 72 horas para gestionarla. Te hemos mostrado la información de la solicitud y recibirás las comunicaciones correspondientes por email.',
+          'Solicitud enviada correctamente. La solicitud no confirma automáticamente la reserva, el propietario dispone de 72 horas para gestionarla. Te hemos mostrado la información de la solicitud y recibirás las comunicaciones correspondientes por email.',
           'success'
         );
 
