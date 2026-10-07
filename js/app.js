@@ -310,36 +310,123 @@
       return;
     }
 
-    toggle.addEventListener('click', () => {
+    /*
+     * El menú debe comenzar SIEMPRE cerrado.
+     * Esto es especialmente importante en iPhone/Safari, donde una
+     * página puede recuperarse desde la caché de navegación (bfcache)
+     * conservando parte de su estado visual anterior.
+     */
+    const closeMenu = (restoreFocus = false) => {
+
+      toggle.setAttribute('aria-expanded', 'false');
+      toggle.setAttribute('aria-label', 'Abrir menú');
+      nav.setAttribute('aria-hidden', 'true');
+      nav.classList.remove('is-open');
+
+      if (restoreFocus) {
+        toggle.focus({ preventScroll: true });
+      }
+    };
+
+    const openMenu = () => {
+
+      toggle.setAttribute('aria-expanded', 'true');
+      toggle.setAttribute('aria-label', 'Cerrar menú');
+      nav.setAttribute('aria-hidden', 'false');
+      nav.classList.add('is-open');
+    };
+
+    /* Estado inicial seguro. */
+    closeMenu(false);
+
+    /*
+     * El texto auxiliar no debe aparecer visualmente aunque una versión
+     * antigua de main.css no tenga todavía la regla .sr-only.
+     */
+    const srOnly = toggle.querySelector('.sr-only');
+
+    if (srOnly) {
+      srOnly.style.position = 'absolute';
+      srOnly.style.width = '1px';
+      srOnly.style.height = '1px';
+      srOnly.style.padding = '0';
+      srOnly.style.margin = '-1px';
+      srOnly.style.overflow = 'hidden';
+      srOnly.style.clip = 'rect(0, 0, 0, 0)';
+      srOnly.style.whiteSpace = 'nowrap';
+      srOnly.style.border = '0';
+    }
+
+    toggle.addEventListener('click', event => {
+
+      event.preventDefault();
+      event.stopPropagation();
 
       const expanded =
         toggle.getAttribute('aria-expanded') === 'true';
 
-      toggle.setAttribute(
-        'aria-expanded',
-        String(!expanded)
-      );
-
-      nav.classList.toggle(
-        'is-open',
-        !expanded
-      );
-
+      if (expanded) {
+        closeMenu(false);
+      } else {
+        openMenu();
+      }
     });
 
     nav.querySelectorAll('a').forEach(link => {
 
       link.addEventListener('click', () => {
 
-        toggle.setAttribute(
-          'aria-expanded',
-          'false'
-        );
-
-        nav.classList.remove('is-open');
-
+        /*
+         * Cerramos inmediatamente antes de cambiar de página.
+         * Así nunca se conserva el menú abierto al entrar en un espacio.
+         */
+        closeMenu(false);
       });
 
+    });
+
+    /* Cerrar al pulsar fuera del menú. */
+    document.addEventListener('click', event => {
+
+      if (!nav.classList.contains('is-open')) {
+        return;
+      }
+
+      if (nav.contains(event.target) || toggle.contains(event.target)) {
+        return;
+      }
+
+      closeMenu(false);
+    });
+
+    /* Cerrar con Escape. */
+    document.addEventListener('keydown', event => {
+
+      if (event.key !== 'Escape') {
+        return;
+      }
+
+      if (!nav.classList.contains('is-open')) {
+        return;
+      }
+
+      closeMenu(true);
+    });
+
+    /*
+     * Si el navegador recupera la página desde bfcache, forzamos de nuevo
+     * el estado cerrado. Safari/iPhone puede restaurar el DOM anterior.
+     */
+    window.addEventListener('pageshow', () => {
+      closeMenu(false);
+    });
+
+    /* Si pasamos a escritorio, el menú móvil debe desaparecer. */
+    window.addEventListener('resize', () => {
+
+      if (window.innerWidth > 767) {
+        closeMenu(false);
+      }
     });
   }
 
@@ -3423,236 +3510,131 @@
      RESERVAR.HTML
      ============================================================ */
 
-  async function initBookingPage() {
+  function initBookingPage() {
 
-    const form = document.querySelector('#booking-request-form');
-    if (!form) return;
+    const form =
+      document.querySelector(
+        '#booking-request-form'
+      );
 
-    const params = new URLSearchParams(window.location.search);
-    const spaceId = params.get('space') || '';
-    const startDate = params.get('start') || '';
-    const endDate = params.get('end') || startDate;
 
-    const selectedSpace = document.querySelector('#selected-space');
-    const selectedStart = document.querySelector('#selected-start');
-    const selectedEnd = document.querySelector('#selected-end');
-    const result = document.querySelector('#booking-request-result');
-    const submit = document.querySelector('#booking-submit');
-    const notice72h = document.querySelector('#booking-72h-notice');
-
-    if (selectedStart) selectedStart.value = formatDateDisplay(startDate);
-    if (selectedEnd) selectedEnd.value = formatDateDisplay(endDate);
-
-    if (notice72h) {
-      notice72h.textContent =
-        'La solicitud no confirma automáticamente la reserva. El propietario dispone de 72 horas para gestionarla.';
+    if (!form) {
+      return;
     }
 
-    if (!spaceId || !startDate || !endDate) {
-      if (submit) submit.disabled = true;
+
+    const params =
+      new URLSearchParams(
+        window.location.search
+      );
+
+
+    const space =
+      params.get('space') || '';
+
+
+    const start =
+      params.get('start') || '';
+
+
+    const end =
+      params.get('end') || start;
+
+
+    const selectedSpace =
+      document.querySelector(
+        '#selected-space'
+      );
+
+
+    const selectedStart =
+      document.querySelector(
+        '#selected-start'
+      );
+
+
+    const selectedEnd =
+      document.querySelector(
+        '#selected-end'
+      );
+
+
+    const result =
+      document.querySelector(
+        '#booking-request-result'
+      );
+
+
+    const submit =
+      document.querySelector(
+        '#booking-submit'
+      );
+
+
+    if (selectedSpace) {
+
+      selectedSpace.value =
+        space || 'Espacio seleccionado';
+
+    }
+
+
+    if (selectedStart) {
+
+      selectedStart.value =
+        formatDateDisplay(start);
+
+    }
+
+
+    if (selectedEnd) {
+
+      selectedEnd.value =
+        formatDateDisplay(end);
+
+    }
+
+
+    if (
+      !space ||
+      !start ||
+      !end
+    ) {
+
+      if (submit) {
+        submit.disabled = true;
+      }
+
+
       showMessage(
         result,
         'Faltan las fechas o el espacio seleccionado. Vuelve al espacio y realiza la selección desde allí.',
         'error'
       );
+
+
       return;
     }
 
-    const client = getSupabaseClient();
 
-    if (!client) {
-      if (submit) submit.disabled = true;
-      showMessage(
-        result,
-        'No se ha podido conectar con el sistema de reservas. Recarga la página e inténtalo de nuevo.',
-        'error'
-      );
-      return;
-    }
+    form.addEventListener(
+      'submit',
+      event => {
 
-    // Importante: mantenemos todos los datos del espacio dentro de este
-    // ámbito y no utilizamos ninguna variable global llamada "spaceRow".
-    // Esto evita el error que apareció en la versión antigua en caché.
-    let selectedSpaceData = null;
+        event.preventDefault();
 
-    try {
-      const { data: spaceData, error: spaceError } = await client
-        .from('spaces')
-        .select(`
-          id,
-          name,
-          city,
-          province,
-          active,
-          admin_enabled,
-          owner_active,
-          active_from,
-          active_until
-        `)
-        .eq('id', spaceId)
-        .maybeSingle();
 
-      if (spaceError) throw spaceError;
-      if (!spaceData) throw new Error('El espacio seleccionado no existe.');
-
-      selectedSpaceData = spaceData;
-
-      const today = getTodayString();
-      const withinPeriod =
-        (!spaceData.active_from || today >= spaceData.active_from) &&
-        (!spaceData.active_until || today <= spaceData.active_until);
-
-      const isPublic =
-        spaceData.active === true &&
-        spaceData.admin_enabled !== false &&
-        spaceData.owner_active !== false &&
-        withinPeriod;
-
-      if (!isPublic) {
-        throw new Error('El espacio seleccionado ya no está disponible.');
-      }
-
-      if (selectedSpace) {
-        selectedSpace.value =
-          `${spaceData.name || 'Espacio seleccionado'}${spaceData.city ? ` · ${spaceData.city}` : ''}`;
-      }
-
-      const { data: available, error: availabilityError } = await client.rpc(
-        'check_space_availability',
-        {
-          p_space_id: spaceId,
-          p_start_date: startDate,
-          p_end_date: endDate
-        }
-      );
-
-      if (availabilityError) throw availabilityError;
-
-      const isAvailable =
-        typeof available === 'boolean'
-          ? available
-          : Boolean(
-              available?.available ??
-              available?.is_available ??
-              available?.result
-            );
-
-      if (!isAvailable) {
-        if (submit) submit.disabled = true;
         showMessage(
           result,
-          'Las fechas seleccionadas ya no están disponibles. Vuelve al calendario y elige otras fechas.',
-          'error'
-        );
-        return;
-      }
-
-      if (submit) submit.disabled = false;
-
-      showMessage(
-        result,
-        'Fechas comprobadas. Puedes enviar la solicitud.',
-        'success'
-      );
-
-    } catch (error) {
-      console.error('Error preparando la reserva:', error);
-
-      if (submit) submit.disabled = true;
-
-      showMessage(
-        result,
-        error?.message || 'No se ha podido preparar la solicitud de reserva.',
-        'error'
-      );
-
-      return;
-    }
-
-    form.addEventListener('submit', async event => {
-      event.preventDefault();
-
-      if (!submit || submit.disabled || !selectedSpaceData) return;
-
-      const name = document.querySelector('#name')?.value.trim() || '';
-      const email = document.querySelector('#email')?.value.trim() || '';
-      const phone = document.querySelector('#phone')?.value.trim() || '';
-      const notes = document.querySelector('#notes')?.value.trim() || '';
-
-      if (!name || !email || !phone) {
-        showMessage(result, 'Nombre, email y teléfono son obligatorios.', 'error');
-        return;
-      }
-
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        showMessage(result, 'Introduce un email válido.', 'error');
-        return;
-      }
-
-      submit.disabled = true;
-      submit.textContent = 'Enviando solicitud…';
-
-      showMessage(result, 'Estamos enviando tu solicitud…', 'info');
-
-      try {
-        const { data: bookingId, error } = await client.rpc(
-          'create_booking_request',
-          {
-            p_space_id: spaceId,
-            p_customer_name: name,
-            p_customer_email: email,
-            p_customer_phone: phone,
-            p_start_date: startDate,
-            p_end_date: endDate,
-            p_cleaning_requested: false,
-            p_customer_notes: notes || null,
-            p_selected_services: []
-          }
-        );
-
-        if (error) throw error;
-        if (!bookingId) {
-          throw new Error('La solicitud no ha devuelto una referencia válida.');
-        }
-
-        // Mensaje definitivo que ya utilizaba el flujo anterior aprobado.
-        showMessage(
-          result,
-          'Solicitud enviada correctamente. El propietario ha recibido la solicitud y contactará contigo para acordar las condiciones y confirmar la reserva.',
+          'La solicitud está preparada. La conexión con Supabase se realizará en el siguiente paso.',
           'success'
         );
 
-        submit.textContent = 'Solicitud enviada';
-
-        form.querySelectorAll('input, textarea, button').forEach(element => {
-          if (element !== submit) element.disabled = true;
-        });
-
-        const backButton = form.querySelector('a');
-        if (backButton) {
-          backButton.style.pointerEvents = 'none';
-          backButton.setAttribute('aria-disabled', 'true');
-        }
-
-      } catch (error) {
-        console.error('Error creando la reserva:', error);
-
-        submit.disabled = false;
-        submit.textContent = 'Enviar solicitud';
-
-        const message = String(
-          error?.message || 'No se ha podido enviar la solicitud.'
-        );
-
-        const friendly =
-          /no está disponible|fechas seleccionadas|rango de fechas/i.test(message)
-            ? message
-            : 'No se ha podido enviar la solicitud. Comprueba los datos e inténtalo de nuevo.';
-
-        showMessage(result, friendly, 'error');
       }
-    });
+    );
+
   }
+
 
 
   /* ============================================================
