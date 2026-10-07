@@ -853,21 +853,125 @@
   }
 
 
-  function initGeneralAvailability() {
+  async function getPublicAvailableSpaces(start, end) {
+    const client = getSupabaseClient();
+    if (!client) throw new Error('No se ha podido conectar con la base de datos pública.');
 
-    const form = document.querySelector('#availability-form');
+    const today = getTodayString();
+    const { data: spaces, error: spacesError } = await client
+      .from('spaces')
+      .select(`id,name,city,province,description,weekday_price,friday_price,saturday_price,sunday_price,holiday_price,active,admin_enabled,owner_active,active_from,active_until`)
+      .eq('active', true)
+      .eq('admin_enabled', true)
+      .eq('owner_active', true)
+      .order('name', { ascending: true });
 
-    if (!form) {
-      return;
+    if (spacesError) throw spacesError;
+
+    const publicSpaces = (spaces || []).filter(space =>
+      (!space.active_from || today >= space.active_from) &&
+      (!space.active_until || today <= space.active_until)
+    );
+
+    const checked = await Promise.all(publicSpaces.map(async space => {
+      try {
+        const { data, error } = await client.rpc('check_space_availability', {
+          p_space_id: space.id,
+          p_start_date: start,
+          p_end_date: end
+        });
+        if (error) throw error;
+        return { space, available: data === true };
+      } catch (error) {
+        console.error(`No se pudo comprobar la disponibilidad de ${space.name || space.id}:`, error);
+        return { space, available: false };
+      }
+    }));
+
+    const available = checked.filter(item => item.available).map(item => item.space);
+
+    return Promise.all(available.map(async space => {
+      let image = '';
+      try {
+        const { data, error } = await client
+          .from('space_images')
+          .select('image_url,sort_order')
+          .eq('space_id', space.id)
+          .order('sort_order', { ascending: true });
+        if (!error) {
+          image = (data || [])
+            .sort((a,b) => Number(a?.sort_order ?? 0) - Number(b?.sort_order ?? 0))
+            .map(row => row?.image_url)
+            .find(value => typeof value === 'string' && value.trim() !== '') || '';
+        }
+      } catch (error) {
+        console.warn(`No se pudo cargar la imagen de ${space.name || space.id}:`, error);
+      }
+      return { ...space, image: image.trim() };
+    }));
+  }
+
+  function renderAvailableSpaces(spaces, start, end, list) {
+    if (!list) return;
+    list.innerHTML = '';
+
+    for (const space of spaces) {
+      const card = document.createElement('article');
+      card.className = 'card';
+
+      const imageWrap = document.createElement('div');
+      imageWrap.className = 'availability-result-card-media';
+      if (space.image) {
+        const image = document.createElement('img');
+        image.src = space.image;
+        image.alt = space.name || 'Espacio para celebrar';
+        image.loading = 'lazy';
+        image.decoding = 'async';
+        imageWrap.appendChild(image);
+      } else {
+        imageWrap.textContent = 'Sin imagen disponible';
+        imageWrap.classList.add('availability-result-card-placeholder');
+      }
+
+      const body = document.createElement('div');
+      body.className = 'card-body';
+      const location = document.createElement('p');
+      location.className = 'eyebrow';
+      location.textContent = [space.city, space.province].filter(Boolean).join(' · ');
+      const title = document.createElement('h3');
+      title.textContent = space.name || 'Espacio';
+      const description = document.createElement('p');
+      description.className = 'muted';
+      description.textContent = space.description || 'Espacio disponible para la fecha seleccionada.';
+      body.append(location, title, description);
+
+      const footer = document.createElement('div');
+      footer.className = 'card-footer';
+      const price = document.createElement('span');
+      price.className = 'price';
+      const startingPrice = getStartingPrice(space);
+      price.textContent = startingPrice !== null ? `Desde ${formatEuro(startingPrice)}` : 'Consultar precio';
+
+      const link = document.createElement('a');
+      link.className = 'button button-secondary';
+      link.href = `espacio.html?id=${encodeURIComponent(space.id)}&start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`;
+      link.textContent = 'Ver espacio →';
+      footer.append(price, link);
+      card.append(imageWrap, body, footer);
+      list.appendChild(card);
     }
+  }
+
+  async function initGeneralAvailability() {
+    const form = document.querySelector('#availability-form');
+    if (!form) return;
 
     const result = document.querySelector('#availability-results');
     const list = document.querySelector('#available-spaces');
     const resetButton = form.querySelector('[type="reset"]');
-
     const availabilityCalendarState = initAvailabilityCalendar();
 
-    form.addEventListener('submit', event => {
+    form.addEventListener('submit', async event => {
       event.preventDefault();
 
       const start = document.querySelector('#start-date')?.value || '';
@@ -877,77 +981,58 @@
         showMessage(result, 'Selecciona una fecha.', 'error');
         return;
       }
-
       if (end < start) {
-        showMessage(
-          result,
-          'La fecha final no puede ser anterior a la inicial.',
-          'error'
-        );
+        showMessage(result, 'La fecha final no puede ser anterior a la inicial.', 'error');
         return;
       }
 
-      if (list) {
-        list.innerHTML = '';
-      }
+      if (list) list.innerHTML = '';
+      showMessage(result, 'Comprobando espacios disponibles…', 'info');
 
-      showMessage(
-        result,
-        `Búsqueda preparada para ${formatDateDisplay(start)}${
-          end !== start
-            ? ` → ${formatDateDisplay(end)}`
-            : ''
-        }.`,
-        'success'
-      );
+      const submitButton = form.querySelector('[type="submit"]');
+      if (submitButton) submitButton.disabled = true;
+
+      try {
+        const availableSpaces = await getPublicAvailableSpaces(start, end);
+
+        if (!availableSpaces.length) {
+          showMessage(result, `No hay espacios disponibles para ${formatDateDisplay(start)}${end !== start ? ` → ${formatDateDisplay(end)}` : ''}.`, 'warning');
+          return;
+        }
+
+        renderAvailableSpaces(availableSpaces, start, end, list);
+        showMessage(result, `${availableSpaces.length} ${availableSpaces.length === 1 ? 'espacio disponible' : 'espacios disponibles'} para ${formatDateDisplay(start)}${end !== start ? ` → ${formatDateDisplay(end)}` : ''}.`, 'success');
+      } catch (error) {
+        console.error('Error buscando espacios disponibles:', error);
+        showMessage(result, 'No se ha podido comprobar la disponibilidad. Inténtalo de nuevo.', 'error');
+      } finally {
+        if (submitButton) submitButton.disabled = false;
+      }
     });
 
     resetButton?.addEventListener('click', () => {
       window.setTimeout(() => {
-        if (result) {
-          result.hidden = true;
-          result.textContent = '';
-        }
-
-        if (list) {
-          list.innerHTML = '';
-        }
+        if (result) { result.hidden = true; result.textContent = ''; }
+        if (list) list.innerHTML = '';
 
         const startInput = document.querySelector('#start-date');
         const endInput = document.querySelector('#end-date');
+        if (startInput) { startInput.value = ''; startInput.dataset.iso = ''; }
+        if (endInput) { endInput.value = ''; endInput.dataset.iso = ''; }
+        document.querySelector('#start-date-display')?.replaceChildren(document.createTextNode('Selecciona una fecha'));
+        document.querySelector('#end-date-display')?.replaceChildren(document.createTextNode('Selecciona una fecha'));
 
-        if (startInput) {
-          startInput.value = '';
-          startInput.dataset.iso = '';
+        if (availabilityCalendarState) {
+          availabilityCalendarState.start = '';
+          availabilityCalendarState.end = '';
+          availabilityCalendarState.activeTarget = 'start';
+          availabilityCalendarState.calendarOpen = false;
         }
-
-        if (endInput) {
-          endInput.value = '';
-          endInput.dataset.iso = '';
-        }
-
-        document.querySelector('#start-date-display')?.replaceChildren(
-          document.createTextNode('Selecciona una fecha')
-        );
-
-        document.querySelector('#end-date-display')?.replaceChildren(
-          document.createTextNode('Selecciona una fecha')
-        );
-
-        availabilityCalendarState.start = '';
-        availabilityCalendarState.end = '';
-        availabilityCalendarState.activeTarget = 'start';
-        availabilityCalendarState.calendarOpen = false;
-
         const panel = document.querySelector('#availability-calendar-panel');
-        if (panel) {
-          panel.hidden = true;
-        }
+        if (panel) panel.hidden = true;
       }, 0);
     });
   }
-
-
 
   /* ============================================================
      RESOLUCIÓN DEL ESPACIO
@@ -3087,36 +3172,49 @@
 
 
     /*
-     * Fecha inicial:
-     * hoy.
+     * Si llegamos desde disponibilidad.html con una selección real,
+     * conservamos esas fechas en la ficha del espacio.
+     * Si no existen parámetros, la ficha comienza sin fechas seleccionadas.
      */
-    state.start =
-      '';
+    const params = new URLSearchParams(window.location.search);
+    const requestedStart = params.get('start') || '';
+    const requestedEnd = params.get('end') || requestedStart;
 
-    state.end =
-      '';
+    const validISODate = value =>
+      /^\d{4}-\d{2}-\d{2}$/.test(value) &&
+      !Number.isNaN(new Date(`${value}T12:00:00`).getTime());
 
+    if (
+      validISODate(requestedStart) &&
+      validISODate(requestedEnd) &&
+      requestedEnd >= requestedStart &&
+      requestedStart >= state.minDate
+    ) {
+      state.start = requestedStart;
+      state.end = requestedEnd;
+      state.activeTarget = 'end';
+
+      const selectedParts = dateToParts(requestedStart);
+      state.year = selectedParts.year;
+      state.month = selectedParts.month;
+
+    } else {
+      state.start = '';
+      state.end = '';
+    }
 
     setSpaceDateInput(
       'space-start-date',
-      ''
+      state.start
     );
-
 
     setSpaceDateInput(
       'space-end-date',
-      ''
+      state.end
     );
 
-
-    renderSpaceCalendar(
-      state
-    );
-
-
-    updateReservationLink(
-      state
-    );
+    renderSpaceCalendar(state);
+    updateReservationLink(state);
 
 
     /*
@@ -3282,6 +3380,16 @@
         }
       );
 
+    }
+
+
+    /*
+     * Si venimos desde la búsqueda global con fechas,
+     * comprobamos de nuevo la disponibilidad en servidor.
+     * Nunca mostramos una reserva como disponible solo por el enlace.
+     */
+    if (state.start && state.end) {
+      await checkSelectedSpaceAvailability(state);
     }
 
 
