@@ -2,454 +2,126 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1"
-  >
-
-  <meta
-    name="description"
-    content="Consulta la información y disponibilidad de un espacio para celebrar."
-  >
-
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Consulta un espacio para celebraciones y eventos en MiEspacioParaCelebrar.">
   <title>Espacio · MiEspacioParaCelebrar</title>
-
-  <link
-    rel="icon"
-    href="assets/logo-placeholder.svg"
-    type="image/svg+xml"
-  >
-
-  <link
-    rel="stylesheet"
-    href="css/main.css"
-  >
-
-  <!-- Configuración pública de Supabase -->
-  <script src="supabase-config.js"></script>
-
-  <!-- Cliente Supabase -->
-  <script
-    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
-  ></script>
-
-  <!-- Lógica principal -->
-  <script
-    defer
-    src="js/app.js"
-  ></script>
+  <link rel="stylesheet" href="css/main.css?v=20261007">
+  <script src="supabase-config.js?v=20261007"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
+<body data-page="space">
 
-<body>
+<header class="site-header">
+  <div class="container nav">
+    <a class="brand" href="index.html" aria-label="MiEspacioParaCelebrar">
+      <span class="brand-mark">MiEspacioParaCelebrar</span>
+    </a>
+    <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="main-nav">
+      <span></span><span></span><span></span>
+      <span class="sr-only">Abrir menú</span>
+    </button>
+    <nav id="main-nav" data-nav aria-label="Navegación principal">
+      <a href="espacios.html">Espacios</a>
+      <a href="disponibilidad.html">Disponibilidad</a>
+      <a href="seguimiento.html">Consultar</a>
+    </nav>
+  </div>
+</header>
 
-  <header class="site-header">
+<main>
+  <section class="section">
+    <div class="container">
+      <a class="button button-secondary" href="espacios.html">← Volver a espacios</a>
 
-    <div class="container nav">
+      <div class="space-detail-grid" style="margin-top:24px;">
+        <article class="card">
+          <div class="space-detail-image" id="space-image" aria-live="polite">Cargando espacio…</div>
+        </article>
 
-      <a
-        class="brand"
-        href="index.html"
-        aria-label="MiEspacioParaCelebrar, inicio"
-      >
-        MiEspacioParaCelebrar
-      </a>
+        <article class="panel">
+          <p class="eyebrow" id="space-location">Cargando ubicación…</p>
+          <h1 id="space-name">Cargando espacio…</h1>
+          <p id="space-description">Cargando información…</p>
+          <p class="price" id="space-price">Consultando precio…</p>
 
-      <button
-        class="nav-toggle"
-        type="button"
-        data-nav-toggle
-        aria-expanded="false"
-        aria-controls="site-nav"
-      >
-        Menú
-      </button>
-
-      <nav
-        id="site-nav"
-        class="nav-links"
-        data-nav
-        aria-label="Navegación principal"
-      >
-
-        <a
-          data-page="espacios.html"
-          href="espacios.html"
-        >
-          Espacios
-        </a>
-
-        <a
-          data-page="disponibilidad.html"
-          href="disponibilidad.html"
-        >
-          Disponibilidad
-        </a>
-
-        <a
-          data-page="seguimiento.html"
-          href="seguimiento.html"
-        >
-          Consultar
-        </a>
-
-      </nav>
-
-    </div>
-
-  </header>
-
-
-  <main>
-
-    <section class="section">
-
-      <div class="container">
-
-        <a
-          class="button button-ghost"
-          href="espacios.html"
-        >
-          ← Volver a espacios
-        </a>
-
-
-        <!-- =========================================
-             FICHA PRINCIPAL DEL ESPACIO
-        ========================================== -->
-
-        <div class="grid grid-2 section-spaced">
-
-
-          <!-- IMAGEN -->
-
-          <div class="card">
-
-            <div
-              id="space-image"
-              class="card-media"
-              aria-label="Imagen del espacio"
-            >
-              Cargando espacio…
-            </div>
-
-          </div>
-
-
-          <!-- INFORMACIÓN -->
-
-          <div class="panel">
-
-            <div
-              id="space-location"
-              class="card-meta"
-            >
-              Cargando…
-            </div>
-
-            <h1 id="space-name">
-              Cargando espacio…
-            </h1>
-
-            <p
-              id="space-description"
-              class="card-copy"
-            >
-              Cargando información del espacio…
-            </p>
-
-            <p
-              id="space-price"
-              class="price"
-            >
-              —
-            </p>
-
-
-            <!-- =====================================
-                 CALENDARIO
-            ====================================== -->
-
-            <div class="panel panel-soft panel-spaced">
-
-              <span class="eyebrow">
-                Disponibilidad
-              </span>
-
-              <h2>
-                Consulta tus fechas
-              </h2>
-
-
-              <div
-                id="space-calendar"
-                class="space-calendar"
-              >
-
-                <div class="space-calendar-fields">
-
-                  <div class="field">
-
-                    <label for="space-start-date">
-                      Desde
-                    </label>
-
-                    <div class="date-input-wrap">
-
-                      <input
-                        id="space-start-date"
-                        name="start_date"
-                        type="text"
-                        inputmode="numeric"
-                        autocomplete="off"
-                        placeholder="dd/mm/aaaa"
-                        readonly
-                        required
-                      >
-
-                      <button
-                        id="space-start-calendar-button"
-                        class="date-input-button"
-                        type="button"
-                        aria-label="Abrir calendario para la fecha de inicio"
-                        aria-expanded="false"
-                      >
-                        ▾
-                      </button>
-
-                    </div>
-
-                  </div>
-
-
-                  <div class="field">
-
-                    <label for="space-end-date">
-                      Hasta
-                    </label>
-
-                    <div class="date-input-wrap">
-
-                      <input
-                        id="space-end-date"
-                        name="end_date"
-                        type="text"
-                        inputmode="numeric"
-                        autocomplete="off"
-                        placeholder="dd/mm/aaaa"
-                        readonly
-                      >
-
-                      <button
-                        id="space-end-calendar-button"
-                        class="date-input-button"
-                        type="button"
-                        aria-label="Abrir calendario para la fecha de finalización"
-                        aria-expanded="false"
-                      >
-                        ▾
-                      </button>
-
-                    </div>
-
-                  </div>
-
+          <div id="space-calendar" class="space-calendar" style="margin-top:24px;">
+            <form id="space-availability-form" novalidate>
+              <div class="form-grid">
+                <div class="form-field date-input-wrap">
+                  <label for="space-start-date">Desde</label>
+                  <button
+                    id="space-start-calendar-button"
+                    class="date-input-button"
+                    type="button"
+                    data-space-calendar-target="start"
+                    aria-haspopup="dialog"
+                    aria-controls="space-calendar-panel">
+                    <span id="space-start-date">Selecciona una fecha</span>
+                    <span aria-hidden="true">▾</span>
+                  </button>
                 </div>
 
-
-                <div
-                  id="space-calendar-panel"
-                  class="calendar-panel"
-                  hidden
-                  aria-label="Calendario de disponibilidad"
-                ></div>
-
-
-                <div
-                  class="calendar-legend"
-                  aria-label="Leyenda del calendario"
-                >
-
-                  <span class="calendar-legend-item">
-                    <i class="calendar-legend-mark legend-available"></i>
-                    Disponible
-                  </span>
-
-                  <span class="calendar-legend-item">
-                    <i class="calendar-legend-mark legend-selected"></i>
-                    Seleccionada
-                  </span>
-
-                  <span class="calendar-legend-item">
-                    <i class="calendar-legend-mark legend-confirmed"></i>
-                    Ocupada
-                  </span>
-
-                  <span class="calendar-legend-item">
-                    <i class="calendar-legend-mark legend-pending"></i>
-                    Retenida
-                  </span>
-
-                  <span class="calendar-legend-item">
-                    <i class="calendar-legend-mark legend-holiday"></i>
-                    Festivo
-                  </span>
-
-                  <span class="calendar-legend-item">
-                    <i class="calendar-legend-mark legend-eve-holiday"></i>
-                    Víspera
-                  </span>
-
+                <div class="form-field date-input-wrap">
+                  <label for="space-end-date">Hasta</label>
+                  <button
+                    id="space-end-calendar-button"
+                    class="date-input-button"
+                    type="button"
+                    data-space-calendar-target="end"
+                    aria-haspopup="dialog"
+                    aria-controls="space-calendar-panel">
+                    <span id="space-end-date">Selecciona una fecha</span>
+                    <span aria-hidden="true">▾</span>
+                  </button>
                 </div>
-
-
-                <form
-                  id="space-availability-form"
-                  novalidate
-                >
-
-                  <div class="form-actions">
-
-                    <button
-                      class="button button-primary"
-                      type="submit"
-                    >
-                      Comprobar disponibilidad
-                    </button>
-
-                  </div>
-
-                </form>
-
-
-                <div
-                  id="space-availability-result"
-                  class="notice"
-                  role="status"
-                  aria-live="polite"
-                ></div>
-
-
-                <div class="form-actions">
-
-                  <a
-                    id="space-book-button"
-                    class="button button-primary"
-                    href="reservar.html"
-                    hidden
-                  >
-                    Solicitar reserva
-                  </a>
-
-                </div>
-
               </div>
 
-            </div>
+              <div
+                id="space-calendar-panel"
+                class="calendar-panel"
+                role="dialog"
+                aria-label="Calendario de disponibilidad"
+                hidden></div>
 
+              <div class="calendar-legend" aria-label="Leyenda del calendario">
+                <span><i class="legend-available"></i> Disponible</span>
+                <span><i class="legend-selected"></i> Seleccionada</span>
+                <span><i class="legend-occupied"></i> Ocupada</span>
+                <span><i class="legend-pending"></i> Retenida</span>
+                <span><i class="legend-holiday"></i> Festivo</span>
+                <span><i class="legend-eve"></i> Víspera</span>
+              </div>
+
+              <div class="form-actions" style="margin-top:18px;">
+                <button class="button button-primary" type="submit">Comprobar disponibilidad</button>
+                <a
+                  id="space-book-button"
+                  class="button button-secondary"
+                  href="reservar.html"
+                  hidden>Solicitar reserva</a>
+              </div>
+
+              <div id="space-availability-result" class="notice" hidden aria-live="polite"></div>
+            </form>
           </div>
-
-        </div>
-
-
-        <!-- =========================================
-             INFORMACIÓN DEL ESPACIO
-        ========================================== -->
-
-        <div class="grid grid-2 section-spaced">
-
-
-          <section class="panel">
-
-            <span class="eyebrow">
-              El espacio
-            </span>
-
-            <h2>
-              Información
-            </h2>
-
-            <p
-              id="space-detail-description"
-              class="card-copy"
-            >
-              Cargando información del espacio…
-            </p>
-
-          </section>
-
-
-          <section class="panel">
-
-            <span class="eyebrow">
-              Condiciones
-            </span>
-
-            <h2>
-              Información de reserva
-            </h2>
-
-            <p
-              id="space-conditions"
-              class="card-copy"
-            >
-              Consulta la disponibilidad del espacio para las fechas
-              que necesitas. Las condiciones específicas se mostrarán
-              cuando estén configuradas para este espacio.
-            </p>
-
-          </section>
-
-
-        </div>
-
-
-        <!-- =========================================
-             CTA FINAL
-        ========================================== -->
-
-        <div class="panel panel-soft">
-
-          <span class="eyebrow">
-            ¿Quieres reservar?
-          </span>
-
-          <h2>
-            Consulta primero la disponibilidad
-          </h2>
-
-          <p class="card-copy">
-            Selecciona las fechas que necesitas y comprueba si este
-            espacio está disponible. Si lo está, podrás solicitar
-            la reserva directamente.
-          </p>
-
-        </div>
-
+        </article>
       </div>
 
-    </section>
-
-  </main>
-
-
-  <footer class="site-footer">
-
-    <div class="container footer-grid">
-
-      <div>
-        <strong>
-          MiEspacioParaCelebrar
-        </strong>
-      </div>
-
-      <div>
-        © <span data-year></span>
-      </div>
-
+      <section class="panel" style="margin-top:24px;">
+        <h2>Información del espacio</h2>
+        <p id="space-detail-description">Cargando información…</p>
+        <div id="space-conditions"></div>
+      </section>
     </div>
+  </section>
+</main>
 
-  </footer>
+<footer class="site-footer">
+  <div class="container footer-inner">
+    <p>© <span data-year></span> MiEspacioParaCelebrar</p>
+  </div>
+</footer>
 
+<script src="js/app.js?v=20261007"></script>
 </body>
 </html>
