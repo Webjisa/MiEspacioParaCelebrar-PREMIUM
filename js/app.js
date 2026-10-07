@@ -3423,131 +3423,177 @@
      RESERVAR.HTML
      ============================================================ */
 
-  function initBookingPage() {
+  async function initBookingPage() {
 
-    const form =
-      document.querySelector(
-        '#booking-request-form'
-      );
+    const form = document.querySelector('#booking-request-form');
+    if (!form) return;
 
+    const params = new URLSearchParams(window.location.search);
+    const space = (params.get('space') || '').trim();
+    const start = (params.get('start') || '').trim();
+    const end = (params.get('end') || start).trim();
 
-    if (!form) {
+    const selectedSpace = document.querySelector('#selected-space');
+    const selectedStart = document.querySelector('#selected-start');
+    const selectedEnd = document.querySelector('#selected-end');
+    const result = document.querySelector('#booking-request-result');
+    const submit = document.querySelector('#booking-submit');
+    const nameInput = document.querySelector('#name');
+    const emailInput = document.querySelector('#email');
+    const phoneInput = document.querySelector('#phone');
+    const notesInput = document.querySelector('#notes');
+
+    if (selectedStart) selectedStart.value = formatDateDisplay(start);
+    if (selectedEnd) selectedEnd.value = formatDateDisplay(end);
+
+    if (!space || !start || !end) {
+      if (submit) submit.disabled = true;
+      showMessage(result, 'Faltan las fechas o el espacio seleccionado. Vuelve al espacio y realiza la selección desde allí.', 'error');
       return;
     }
 
-
-    const params =
-      new URLSearchParams(
-        window.location.search
-      );
-
-
-    const space =
-      params.get('space') || '';
-
-
-    const start =
-      params.get('start') || '';
-
-
-    const end =
-      params.get('end') || start;
-
-
-    const selectedSpace =
-      document.querySelector(
-        '#selected-space'
-      );
-
-
-    const selectedStart =
-      document.querySelector(
-        '#selected-start'
-      );
-
-
-    const selectedEnd =
-      document.querySelector(
-        '#selected-end'
-      );
-
-
-    const result =
-      document.querySelector(
-        '#booking-request-result'
-      );
-
-
-    const submit =
-      document.querySelector(
-        '#booking-submit'
-      );
-
-
-    if (selectedSpace) {
-
-      selectedSpace.value =
-        space || 'Espacio seleccionado';
-
+    const client = getSupabaseClient();
+    if (!client) {
+      if (submit) submit.disabled = true;
+      showMessage(result, 'No se ha podido conectar con el sistema de reservas.', 'error');
+      return;
     }
 
+    /* El nombre visible del espacio se obtiene de Supabase; nunca mostramos el UUID al cliente. */
+    try {
+      const { data: spaceRow, error: spaceError } = await client
+        .from('spaces')
+        .select('id,name,city,province,active,admin_enabled,owner_active,active_from,active_until')
+        .eq('id', space)
+        .maybeSingle();
 
-    if (selectedStart) {
+      if (spaceError) throw spaceError;
 
-      selectedStart.value =
-        formatDateDisplay(start);
+      const publicNow = new Date();
+      const today = new Date(publicNow.getFullYear(), publicNow.getMonth(), publicNow.getDate());
+      const fromOk = !spaceRow?.active_from || new Date(`${spaceRow.active_from}T12:00:00`) <= today;
+      const untilOk = !spaceRow?.active_until || new Date(`${spaceRow.active_until}T12:00:00`) >= today;
 
+      if (!spaceRow || spaceRow.active !== true || spaceRow.admin_enabled === false || spaceRow.owner_active === false || !fromOk || !untilOk) {
+        if (submit) submit.disabled = true;
+        showMessage(result, 'El espacio ya no está disponible para realizar esta solicitud.', 'error');
+        return;
+      }
+
+      if (selectedSpace) {
+        selectedSpace.value = spaceRow.name || 'Espacio seleccionado';
+      }
+
+    } catch (error) {
+      console.error('Error cargando el espacio de la reserva:', error);
+      if (submit) submit.disabled = true;
+      showMessage(result, 'No se ha podido comprobar el espacio seleccionado.', 'error');
+      return;
     }
 
-
-    if (selectedEnd) {
-
-      selectedEnd.value =
-        formatDateDisplay(end);
-
+    /* Comprobación final antes de permitir el envío. */
+    let available = false;
+    try {
+      const { data, error } = await client.rpc('check_space_availability', {
+        p_space_id: space,
+        p_start_date: start,
+        p_end_date: end
+      });
+      if (error) throw error;
+      available = data === true;
+    } catch (error) {
+      console.error('Error comprobando disponibilidad antes de reservar:', error);
+      if (submit) submit.disabled = true;
+      showMessage(result, 'No se ha podido comprobar la disponibilidad. No se ha enviado ninguna solicitud.', 'error');
+      return;
     }
 
+    if (!available) {
+      if (submit) submit.disabled = true;
+      showMessage(result, 'Las fechas seleccionadas ya no están disponibles. Vuelve al espacio y elige otras fechas.', 'error');
+      return;
+    }
 
-    if (
-      !space ||
-      !start ||
-      !end
-    ) {
+    if (submit) submit.disabled = false;
+
+    form.addEventListener('submit', async event => {
+      event.preventDefault();
+
+      const customerName = nameInput?.value.trim() || '';
+      const customerEmail = emailInput?.value.trim() || '';
+      const customerPhone = phoneInput?.value.trim() || '';
+      const customerNotes = notesInput?.value.trim() || null;
+
+      if (!customerName || !customerEmail || !customerPhone) {
+        showMessage(result, 'Nombre, email y teléfono son obligatorios.', 'error');
+        return;
+      }
+
+      const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail);
+      if (!emailOk) {
+        showMessage(result, 'Introduce un email válido.', 'error');
+        emailInput?.focus();
+        return;
+      }
 
       if (submit) {
         submit.disabled = true;
+        submit.textContent = 'Enviando solicitud…';
       }
 
+      showMessage(result, 'Comprobando las fechas y enviando la solicitud…', 'warning');
 
-      showMessage(
-        result,
-        'Faltan las fechas o el espacio seleccionado. Vuelve al espacio y realiza la selección desde allí.',
-        'error'
-      );
+      try {
+        /* La RPC vuelve a comprobar disponibilidad de forma atómica en backend. */
+        const { data: bookingId, error } = await client.rpc('create_booking_request', {
+          p_space_id: space,
+          p_customer_name: customerName,
+          p_customer_email: customerEmail,
+          p_customer_phone: customerPhone,
+          p_start_date: start,
+          p_end_date: end,
+          p_cleaning_requested: false,
+          p_customer_notes: customerNotes,
+          p_selected_services: []
+        });
 
+        if (error) throw error;
 
-      return;
-    }
+        if (!bookingId) {
+          throw new Error('Supabase no devolvió el identificador de la solicitud.');
+        }
 
-
-    form.addEventListener(
-      'submit',
-      event => {
-
-        event.preventDefault();
-
+        form.reset();
+        if (selectedStart) selectedStart.value = formatDateDisplay(start);
+        if (selectedEnd) selectedEnd.value = formatDateDisplay(end);
+        if (selectedSpace && selectedSpace.value === '') selectedSpace.value = 'Solicitud enviada';
 
         showMessage(
           result,
-          'La solicitud está preparada. La conexión con Supabase se realizará en el siguiente paso.',
+          'Solicitud enviada correctamente. El propietario dispone de 72 horas para gestionarla. Te hemos mostrado la información de la solicitud y recibirás las comunicaciones correspondientes por email.',
           'success'
         );
 
+        const confirmation = document.createElement('div');
+        confirmation.className = 'notice notice-success';
+        confirmation.setAttribute('role', 'status');
+        confirmation.style.marginTop = '12px';
+        confirmation.textContent = `Referencia de solicitud: ${bookingId}`;
+        result?.insertAdjacentElement('afterend', confirmation);
+
+        if (submit) submit.hidden = true;
+
+      } catch (error) {
+        console.error('Error creando solicitud de reserva:', error);
+        const message = error?.message || 'No se ha podido enviar la solicitud.';
+        showMessage(result, message, 'error');
+        if (submit) {
+          submit.disabled = false;
+          submit.textContent = 'Enviar solicitud';
+        }
       }
-    );
-
+    });
   }
-
 
 
   /* ============================================================
@@ -4009,7 +4055,7 @@
 
     initGeneralAvailability();
 
-    initBookingPage();
+    await initBookingPage();
 
     await initSpacePage();
 
