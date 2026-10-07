@@ -1381,13 +1381,21 @@
         position: relative;
         min-width: 0;
         width: 44px !important;
+        min-width: 44px !important;
+        max-width: 44px !important;
         height: 44px !important;
+        min-height: 44px !important;
+        max-height: 44px !important;
         margin: 0 auto !important;
+        padding: 0 !important;
         align-self: center;
         justify-self: center;
         box-sizing: border-box;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
         border: 1px solid transparent;
-        border-radius: 50%;
+        border-radius: 50% !important;
         background: #fff;
         color: var(--text, #20231f);
         font: inherit;
@@ -1469,7 +1477,11 @@
       @media (max-width: 700px) {
         .calendar-grid .calendar-day {
           width: 38px !important;
+          min-width: 38px !important;
+          max-width: 38px !important;
           height: 38px !important;
+          min-height: 38px !important;
+          max-height: 38px !important;
         }
       }
 
