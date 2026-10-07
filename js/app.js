@@ -3296,6 +3296,11 @@
       if (space.conditions_text) rows.push(['Condiciones', space.conditions_text]);
       if (space.cancellation_policy) rows.push(['Cancelación', space.cancellation_policy]);
 
+      const leftColumn = document.createElement('div');
+      const rightColumn = document.createElement('div');
+      leftColumn.className = 'space-conditions-column';
+      rightColumn.className = 'space-conditions-column';
+
       rows.forEach(([label, value]) => {
         const row = document.createElement('div');
         row.className = 'space-condition-row';
@@ -3304,8 +3309,18 @@
         const valueEl = document.createElement('span');
         valueEl.textContent = value;
         row.append(labelEl, valueEl);
-        conditionsElement.appendChild(row);
+
+        // Fianza y limpieza quedan juntas en la columna izquierda,
+        // evitando que una condición larga de la derecha empuje su precio.
+        if (label === 'Fianza' || label === 'Limpieza') {
+          leftColumn.appendChild(row);
+        } else {
+          rightColumn.appendChild(row);
+        }
       });
+
+      if (leftColumn.childElementCount) conditionsElement.appendChild(leftColumn);
+      if (rightColumn.childElementCount) conditionsElement.appendChild(rightColumn);
     }
 
     document.title = `${name} · MiEspacioParaCelebrar`;
