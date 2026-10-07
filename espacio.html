@@ -8,6 +8,158 @@
   <link rel="stylesheet" href="css/main.css?v=20261007">
   <script src="supabase-config.js?v=20261007"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    /* =========================================================
+       FICHA DE ESPACIO · AJUSTE VISUAL PREMIUM v8
+       Solo afecta a la página de espacio.
+    ========================================================= */
+    body[data-page="space"] .site-header .brand-mark {
+      display:inline-flex;
+      align-items:center;
+      color:var(--text);
+      font-size:1.08rem;
+      font-weight:850;
+      letter-spacing:-0.025em;
+      white-space:nowrap;
+    }
+
+    body[data-page="space"] .site-header #main-nav {
+      display:flex;
+      align-items:center;
+      gap:4px;
+    }
+
+    body[data-page="space"] .site-header #main-nav a {
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:42px;
+      padding:9px 13px;
+      border-radius:11px;
+      color:var(--muted);
+      text-decoration:none;
+      font-size:.94rem;
+      font-weight:700;
+      transition:background 160ms ease,color 160ms ease,transform 160ms ease;
+    }
+
+    body[data-page="space"] .site-header #main-nav a:first-child,
+    body[data-page="space"] .site-header #main-nav a:hover,
+    body[data-page="space"] .site-header #main-nav a:focus-visible {
+      background:var(--surface-soft);
+      color:var(--text);
+    }
+
+    body[data-page="space"] .site-header #main-nav a:hover {
+      transform:translateY(-1px);
+    }
+
+    body[data-page="space"] .space-detail-grid {
+      align-items:start;
+    }
+
+    /* Imagen principal: más contenida y elegante. */
+    body[data-page="space"] .space-detail-image {
+      min-height:0;
+      height:320px;
+      border-radius:18px;
+      overflow:hidden;
+      background:#edf1ed;
+    }
+
+    body[data-page="space"] .space-detail-image img {
+      width:100%;
+      height:100%;
+      min-height:0;
+      object-fit:cover;
+    }
+
+    /* Miniaturas pequeñas, uniformes y escalables según el número de fotos. */
+    body[data-page="space"] .space-gallery {
+      display:grid;
+      grid-template-columns:repeat(auto-fill,88px);
+      justify-content:start;
+      gap:8px;
+      margin-top:10px;
+    }
+
+    body[data-page="space"] .space-gallery-thumb {
+      width:88px;
+      height:66px;
+      aspect-ratio:auto;
+      border-radius:10px;
+      border:1px solid var(--line);
+      transition:border-color 160ms ease,box-shadow 160ms ease,transform 160ms ease;
+    }
+
+    body[data-page="space"] .space-gallery-thumb:hover {
+      transform:translateY(-1px);
+    }
+
+    body[data-page="space"] .space-gallery-thumb.is-active {
+      border-color:var(--green);
+      box-shadow:0 0 0 2px var(--green-soft);
+    }
+
+    /* La información inferior se presenta como una ficha limpia. */
+    body[data-page="space"] #space-conditions {
+      margin-top:18px;
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      column-gap:32px;
+    }
+
+    body[data-page="space"] .space-condition-row {
+      grid-template-columns:1fr;
+      gap:4px;
+      padding:14px 0;
+    }
+
+    body[data-page="space"] .space-condition-row strong {
+      color:var(--muted);
+      font-size:.78rem;
+      font-weight:800;
+      letter-spacing:.06em;
+      text-transform:uppercase;
+    }
+
+    body[data-page="space"] .space-condition-row span {
+      color:var(--text);
+      font-size:.96rem;
+    }
+
+    @media (max-width:767px) {
+      body[data-page="space"] .site-header #main-nav {
+        gap:3px;
+      }
+
+      body[data-page="space"] .site-header #main-nav a {
+        min-height:44px;
+      }
+
+      body[data-page="space"] .space-detail-image {
+        height:240px;
+      }
+
+      body[data-page="space"] .space-gallery {
+        grid-template-columns:repeat(auto-fill,74px);
+        gap:7px;
+      }
+
+      body[data-page="space"] .space-gallery-thumb {
+        width:74px;
+        height:56px;
+        border-radius:9px;
+      }
+
+      body[data-page="space"] #space-conditions {
+        grid-template-columns:1fr;
+        column-gap:0;
+      }
+    }
+  </style>
+
 </head>
 <body data-page="space">
 
@@ -22,7 +174,7 @@
       <span class="sr-only">Abrir menú</span>
     </button>
 
-    <nav id="main-nav" data-nav aria-label="Navegación principal">
+    <nav id="main-nav" class="nav-links" data-nav aria-label="Navegación principal">
       <a href="espacios.html">Espacios</a>
       <a href="disponibilidad.html">Disponibilidad</a>
       <a href="seguimiento.html">Consultar</a>
@@ -115,6 +267,6 @@
   </div>
 </footer>
 
-<script src="js/app.js?v=20261007-2"></script>
+<script src="js/app.js?v=20261007-8"></script>
 </body>
 </html>
