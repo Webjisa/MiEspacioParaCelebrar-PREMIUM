@@ -1014,12 +1014,14 @@
       .calendar-grid .calendar-day {
         position: relative;
         min-width: 0;
-        width: auto !important;
-        margin: 3px !important;
-        aspect-ratio: 1 / 1;
+        width: 44px !important;
+        height: 44px !important;
+        margin: 0 auto !important;
+        align-self: center;
+        justify-self: center;
         box-sizing: border-box;
         border: 1px solid transparent;
-        border-radius: 10px;
+        border-radius: 50%;
         background: #fff;
         color: var(--text, #20231f);
         font: inherit;
@@ -1089,13 +1091,20 @@
         background: #e7f0e9;
         border: 1px solid #7ea58c;
         color: #294d3d;
-        box-shadow: inset 0 0 0 0.5px #7ea58c;
+        box-shadow: none;
       }
 
       .calendar-day.today {
         text-decoration: underline;
         text-decoration-thickness: 2px;
         text-underline-offset: 3px;
+      }
+
+      @media (max-width: 700px) {
+        .calendar-grid .calendar-day {
+          width: 38px !important;
+          height: 38px !important;
+        }
       }
 
       .calendar-legend {
