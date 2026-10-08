@@ -109,7 +109,7 @@ main {
 
 .nav {
   position: relative;
-  min-height: 72px;
+  min-height: 68px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -121,7 +121,7 @@ main {
   align-items: center;
   text-decoration: none;
   color: var(--text);
-  font-size: 1.08rem;
+  font-size: 1rem;
   font-weight: 850;
   letter-spacing: -0.025em;
   white-space: nowrap;
@@ -199,16 +199,16 @@ h3 {
 }
 
 h1 {
-  max-width: 760px;
-  margin: 14px 0 22px;
-  font-size: clamp(2.6rem, 6vw, 5.15rem);
+  max-width: 720px;
+  margin: 12px 0 18px;
+  font-size: clamp(2.35rem, 5.2vw, 4.35rem);
   line-height: 0.98;
   letter-spacing: -0.065em;
 }
 
 h2 {
   margin: 0 0 12px;
-  font-size: clamp(1.8rem, 3vw, 2.7rem);
+  font-size: clamp(1.65rem, 2.6vw, 2.4rem);
   line-height: 1.08;
   letter-spacing: -0.045em;
 }
@@ -225,14 +225,14 @@ p {
 .lead {
   max-width: 62ch;
   color: var(--muted);
-  font-size: 1.12rem;
+  font-size: 1.02rem;
 }
 
 .hero-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  margin-top: 28px;
+  margin-top: 22px;
 }
 
 /* =========================
@@ -244,8 +244,8 @@ p {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  min-height: 48px;
-  padding: 12px 17px;
+  min-height: 44px;
+  padding: 10px 15px;
   border: 1px solid transparent;
   border-radius: 12px;
   text-decoration: none;
@@ -315,7 +315,7 @@ p {
   aspect-ratio: 1.05 / 1;
   display: grid;
   place-items: center;
-  padding: 30px;
+  padding: 24px;
   background:
     linear-gradient(
       145deg,
@@ -330,13 +330,13 @@ p {
 }
 
 .hero-card-body {
-  padding: 24px;
+  padding: 20px;
 }
 
 .hero-card-body strong {
   display: block;
   margin-bottom: 8px;
-  font-size: 1.08rem;
+  font-size: 1rem;
 }
 
 .card-copy {
@@ -349,7 +349,7 @@ p {
 ========================= */
 
 .section {
-  padding: 76px 0;
+  padding: 62px 0;
 }
 
 .section-header {
@@ -357,7 +357,7 @@ p {
   align-items: end;
   justify-content: space-between;
   gap: 24px;
-  margin-bottom: 30px;
+  margin-bottom: 24px;
 }
 
 .section-header p {
@@ -371,7 +371,7 @@ p {
 
 .grid {
   display: grid;
-  gap: 20px;
+  gap: 16px;
 }
 
 .grid-4 {
@@ -392,31 +392,14 @@ p {
 
 .card {
   overflow: hidden;
-  container-type: inline-size;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
 }
 
-.card-media {
-  min-height: 220px;
-  display: grid;
-  place-items: center;
-  padding: 24px;
-  background:
-    linear-gradient(
-      145deg,
-      #e5ede7 0%,
-      #edf1ea 48%,
-      #f3eee5 100%
-    );
-  color: var(--muted);
-  text-align: center;
-}
-
 .card-body {
-  padding: 22px;
+  padding: 18px;
 }
 
 .card-meta {
@@ -428,7 +411,7 @@ p {
 
 .card-title {
   margin-bottom: 8px;
-  font-size: 1.16rem;
+  font-size: 1.05rem;
   font-weight: 850;
   letter-spacing: -0.02em;
 }
@@ -436,42 +419,24 @@ p {
 .card-footer {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 14px;
-  padding: 0 22px 22px;
+  padding: 0 18px 18px;
 }
 
 .price {
-  flex: 1 1 auto;
-  min-width: 0;
-  color: var(--green);
-  font-size: 1.05rem;
-  font-weight: 900;
-  line-height: 1.25;
+  flex: 0 0 auto;
   white-space: nowrap;
 }
 
-.card-footer .button {
+.price {
+  display: inline-flex;
+  align-items: center;
   flex: 0 0 auto;
-  min-width: 0;
-}
-
-/*
- * La tarjeta decide según su propio ancho.
- *
- * Esto evita que precio y botón se solapen
- * cuando existen cuatro tarjetas por fila.
- */
-@container (max-width: 310px) {
-
-  .card-footer {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 14px;
-  }
-
-  .card-footer .button {
-    width: 100%;
-  }
+  white-space: nowrap;
+  color: var(--green);
+  font-size: 0.98rem;
+  font-weight: 900;
 }
 
 /* =========================
@@ -479,7 +444,7 @@ p {
 ========================= */
 
 .panel {
-  padding: 28px;
+  padding: 22px;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
@@ -498,7 +463,7 @@ p {
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 17px;
+  gap: 14px;
 }
 
 .field {
@@ -520,8 +485,8 @@ input,
 select,
 textarea {
   width: 100%;
-  min-height: 48px;
-  padding: 11px 13px;
+  min-height: 44px;
+  padding: 9px 12px;
   background: #ffffff;
   border: 1px solid var(--line);
   border-radius: 11px;
@@ -529,7 +494,7 @@ textarea {
 }
 
 textarea {
-  min-height: 120px;
+  min-height: 105px;
   resize: vertical;
 }
 
@@ -702,7 +667,7 @@ textarea:focus {
 }
 
 .kpi {
-  padding: 20px;
+  padding: 16px;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 16px;
@@ -710,7 +675,7 @@ textarea:focus {
 
 .kpi-value {
   margin-top: 4px;
-  font-size: 1.9rem;
+  font-size: 1.65rem;
   font-weight: 900;
 }
 
@@ -734,7 +699,7 @@ table {
 
 th,
 td {
-  padding: 13px 14px;
+  padding: 10px 12px;
   border-bottom: 1px solid var(--line);
   text-align: left;
   vertical-align: top;
@@ -755,10 +720,10 @@ tr:last-child td {
 .status {
   display: inline-flex;
   align-items: center;
-  min-height: 28px;
-  padding: 5px 9px;
+  min-height: 26px;
+  padding: 4px 8px;
   border-radius: 999px;
-  font-size: 0.77rem;
+  font-size: 0.72rem;
   font-weight: 850;
 }
 
@@ -829,7 +794,7 @@ tr:last-child td {
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 20px;
+  gap: 16px;
 }
 
 /* =========================
@@ -837,7 +802,6 @@ tr:last-child td {
 ========================= */
 
 @media (max-width: 1099px) {
-
   .hero-grid {
     grid-template-columns: 1fr;
     gap: 36px;
@@ -852,9 +816,7 @@ tr:last-child td {
   }
 }
 
-
 @media (max-width: 767px) {
-
   .container {
     width: min(100% - 24px, var(--container));
   }
@@ -865,7 +827,7 @@ tr:last-child td {
   }
 
   .nav {
-    min-height: 64px;
+    min-height: 60px;
   }
 
   .nav-toggle {
@@ -897,20 +859,20 @@ tr:last-child td {
   .nav-links a {
     width: 100%;
     justify-content: flex-start;
-    min-height: 44px;
+    min-height: 40px;
   }
 
   .hero {
-    padding: 48px 0 34px;
+    padding: 40px 0 28px;
   }
 
   h1 {
-    font-size: clamp(2.35rem, 12vw, 3.45rem);
+    font-size: clamp(2.05rem, 10vw, 3rem);
     letter-spacing: -0.06em;
   }
 
   .lead {
-    font-size: 1rem;
+    font-size: 0.96rem;
   }
 
   .hero-actions {
@@ -923,7 +885,7 @@ tr:last-child td {
   }
 
   .section {
-    padding: 54px 0;
+    padding: 46px 0;
   }
 
   .section-header {
@@ -950,25 +912,6 @@ tr:last-child td {
 
   .panel {
     padding: 19px;
-  }
-
-  /*
-   * En móvil siempre separamos
-   * precio y botón.
-   */
-  .card-footer {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 14px;
-  }
-
-  .price {
-    min-width: 0;
-    white-space: nowrap;
-  }
-
-  .card-footer .button {
-    width: 100%;
   }
 
   .calendar-day {
