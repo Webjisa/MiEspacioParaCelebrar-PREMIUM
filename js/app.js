@@ -298,6 +298,42 @@
      NAVEGACIÓN
      ============================================================ */
 
+  function normalizePrimaryNavigation(nav) {
+
+    if (!nav) {
+      return;
+    }
+
+    /*
+     * La navegación principal es única en toda la web.
+     * No dependemos de que cada HTML tenga exactamente los mismos enlaces:
+     * app.js los normaliza al cargar cualquier página.
+     *
+     * Reservar NO forma parte de la navegación principal.
+     * La reserva se alcanza únicamente desde el flujo de disponibilidad.
+     */
+    nav.innerHTML = `
+      <a href="espacios.html">Espacios</a>
+      <a href="disponibilidad.html">Disponibilidad</a>
+      <a href="seguimiento.html">Consultar</a>
+      <a href="acceso.html">Área privada</a>
+    `;
+
+    const currentPath =
+      window.location.pathname.split('/').pop() || 'index.html';
+
+    nav.querySelectorAll('a').forEach(link => {
+      const href = link.getAttribute('href');
+
+      if (href === currentPath) {
+        link.setAttribute('aria-current', 'page');
+      } else {
+        link.removeAttribute('aria-current');
+      }
+    });
+  }
+
+
   function initNavigation() {
 
     const toggle =
@@ -311,12 +347,10 @@
     }
 
     /*
-     * Normalizamos visualmente el control del menú en TODAS las páginas.
-     * Algunas versiones antiguas llevaban tres <span> para dibujar una
-     * hamburguesa y otras ya usaban el texto "Menú". La interfaz
-     * definitiva debe ser idéntica en móvil en todo el sitio.
+     * Normalizamos primero los cuatro accesos para que todas las páginas
+     * tengan exactamente la misma navegación, tanto en escritorio como en móvil.
      */
-    toggle.textContent = 'Menú';
+    normalizePrimaryNavigation(nav);
 
     /*
      * El menú debe comenzar SIEMPRE cerrado.
