@@ -5,14 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Consulta un espacio para celebraciones y eventos en MiEspacioParaCelebrar.">
   <title>Espacio · MiEspacioParaCelebrar</title>
-  <link rel="stylesheet" href="css/main.css?v=20261007">
-  <script src="supabase-config.js?v=20261007"></script>
+  <link rel="stylesheet" href="css/main.css?v=20261008-navfix">
+  <script src="supabase-config.js?v=20261008-navfix"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
     /* =========================================================
-       FICHA DE ESPACIO · AJUSTE VISUAL PREMIUM v8
-       Solo afecta a la página de espacio.
+       FICHA DE ESPACIO · AJUSTE VISUAL PREMIUM v9
+       Mantiene la ficha validada y corrige exclusivamente
+       el comportamiento del menú en móvil.
     ========================================================= */
     body[data-page="space"] .site-header .brand-mark {
       display:inline-flex;
@@ -138,13 +139,26 @@
       font-size:.96rem;
     }
 
+    /* =========================================================
+       CORRECCIÓN DEFINITIVA DEL MENÚ MÓVIL
+       En la versión anterior esta página tenía un display:flex
+       demasiado específico que anulaba el menú cerrado de main.css.
+    ========================================================= */
     @media (max-width:767px) {
       body[data-page="space"] .site-header #main-nav {
+        display:none;
         gap:3px;
+      }
+
+      body[data-page="space"] .site-header #main-nav.is-open {
+        display:flex;
+        flex-direction:column;
+        align-items:stretch;
       }
 
       body[data-page="space"] .site-header #main-nav a {
         min-height:44px;
+        width:100%;
       }
 
       body[data-page="space"] .space-detail-image {
@@ -257,11 +271,10 @@
           </div>
         </article>
 
-      <article class="card">
-        <div class="space-detail-image" id="space-image" aria-live="polite">Cargando imagen…</div>
-        <div id="space-gallery" class="space-gallery" aria-label="Galería del espacio"></div>
-      </article>
-
+        <article class="card">
+          <div class="space-detail-image" id="space-image" aria-live="polite">Cargando imagen…</div>
+          <div id="space-gallery" class="space-gallery" aria-label="Galería del espacio"></div>
+        </article>
       </div>
 
       <section class="panel" style="margin-top:24px;">
@@ -279,6 +292,6 @@
   </div>
 </footer>
 
-<script src="js/app.js?v=20261007-8"></script>
+<script src="js/app.js?v=20261008-navfix"></script>
 </body>
 </html>
