@@ -4169,6 +4169,10 @@
 
     initBookingPage();
 
+    if (typeof window.initPrivatePage === 'function') {
+      await window.initPrivatePage();
+    }
+
     await initSpacePage();
 
   }
