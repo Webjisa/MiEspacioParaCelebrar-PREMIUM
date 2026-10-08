@@ -48,6 +48,13 @@
    tablet, móvil vertical u horizontal.
 ========================================================= */
 
+.booking-filter-count{
+  margin:8px 0 18px;
+  color:#596153;
+  font-size:.88rem;
+  font-weight:700;
+}
+
 .admin-shell,
 .admin-shell *{box-sizing:border-box}
 .admin-shell{width:100%;min-width:0;max-width:100%;overflow:hidden}
@@ -247,12 +254,6 @@
   }
   .admin-actions .btn,
   .admin-filters select{width:100%;min-height:44px}
-  .booking-filter-count{
-    margin:8px 0 18px;
-    color:#596153;
-    font-size:.88rem;
-    font-weight:700;
-  }
 
   /* Todas las tablas se convierten en tarjetas */
   .admin-table-wrap{overflow:visible}
@@ -801,30 +802,24 @@
 
   function renderBookings(root){
     const rows=[...state.bookings].sort((a,b)=>String(b.created_at).localeCompare(String(a.created_at)));
-    root.innerHTML=header('RESERVAS','Solicitudes y reservas')+`<div class="admin-filters">
-      <select id="bookingFilter" aria-label="Filtrar reservas por estado">
-        <option value="all">Todos los estados</option>
-        <option value="pending">Pendientes</option>
-        <option value="confirmed">Confirmadas</option>
-        <option value="rejected">Rechazadas</option>
-        <option value="expired">Caducadas</option>
-      </select>
-    </div>
-    <p id="bookingFilterCount" class="booking-filter-count" aria-live="polite"></p>
-    <div class="admin-card"><div class="admin-table-wrap"><table class="admin-table">
+    root.innerHTML=header('RESERVAS','Solicitudes y reservas')+`<div class="admin-filters"><select id="bookingFilter">
+      <option value="all">Todos los estados</option>
+      <option value="pending">Pendientes</option>
+      <option value="confirmed">Confirmadas</option>
+      <option value="rejected">Rechazadas</option>
+      <option value="expired">Caducadas</option>
+    </select></div><p id="bookingFilterCount" class="booking-filter-count" aria-live="polite"></p><div class="admin-card"><div class="admin-table-wrap"><table class="admin-table">
       <thead><tr><th>Espacio</th><th>Cliente</th><th>Fechas</th><th>Limpieza</th><th>Estado</th><th>Acciones</th></tr></thead>
       <tbody id="bookingRows"></tbody></table></div></div><p class="admin-message"></p>`;
 
     const paint=()=>{
       const f=root.querySelector('#bookingFilter').value;
       const filtered=f==='all'?rows:rows.filter(b=>b.booking_status===f);
-
       const count=root.querySelector('#bookingFilterCount');
       if(count){
         const total=filtered.length;
         count.textContent=`${total} ${total===1?'reserva':'reservas'}`;
       }
-
       root.querySelector('#bookingRows').innerHTML=filtered.length
         ? filtered.map(b=>`<tr>
             <td data-label="Espacio"><strong>${esc(b.space_name)}</strong></td>
