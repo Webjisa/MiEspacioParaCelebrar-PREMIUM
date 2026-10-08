@@ -311,6 +311,14 @@
     }
 
     /*
+     * Normalizamos visualmente el control del menú en TODAS las páginas.
+     * Algunas versiones antiguas llevaban tres <span> para dibujar una
+     * hamburguesa y otras ya usaban el texto "Menú". La interfaz
+     * definitiva debe ser idéntica en móvil en todo el sitio.
+     */
+    toggle.textContent = 'Menú';
+
+    /*
      * El menú debe comenzar SIEMPRE cerrado.
      * Esto es especialmente importante en iPhone/Safari, donde una
      * página puede recuperarse desde la caché de navegación (bfcache)
