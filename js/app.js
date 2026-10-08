@@ -19,6 +19,7 @@
    * - Vísperas de festivo
    * - Selección de rangos
    * - Enlace hacia reservar.html
+   * - CALENDARIO-PAST-20261008: fechas pasadas neutras en ambos calendarios
    *
    * IMPORTANTE:
    * La clave utilizada debe ser la ANON KEY pública de Supabase.
@@ -753,7 +754,14 @@
 
       const classes = ['calendar-day'];
 
-      if (isSelected) {
+      /*
+       * En el calendario GENERAL, las fechas anteriores a hoy deben
+       * conservar exactamente el aspecto de las fechas del mes anterior:
+       * gris suave, sin selección ni ninguna otra marca visual.
+       */
+      if (isPast) {
+        classes.push('past');
+      } else if (isSelected) {
         classes.push('selected');
       }
 
@@ -1622,10 +1630,22 @@
         background: var(--surface-soft, #edf2ed);
       }
 
-      .calendar-day.outside {
-        color: #c7cdc8;
-        background: transparent;
+      .calendar-day.outside,
+      .calendar-day.past {
+        color: #c7cdc8 !important;
+        background: transparent !important;
+        border-color: transparent !important;
+        box-shadow: none !important;
         cursor: default;
+      }
+
+      /*
+       * Las fechas pasadas tienen prioridad visual absoluta.
+       * Esto evita que reglas antiguas o estados de festivo/ocupación
+       * vuelvan a pintar rojo, azul, naranja o verde los días ya pasados.
+       */
+      .calendar-day.past::after {
+        content: none !important;
       }
 
       .calendar-day:disabled {
@@ -2071,12 +2091,21 @@
       );
 
     /*
-     * Una fecha solo muestra UN estado visual principal.
-     * Así evitamos que festivo, víspera y selección se
-     * pisen entre sí. Las fechas ocupadas/retenidas no
-     * pueden formar parte de una selección.
+     * Las fechas anteriores a hoy quedan visualmente "cumplidas":
+     * exactamente como los días del mes anterior, en gris suave y
+     * SIN marcas de ocupada, retenida, festivo, víspera o selección.
+     *
+     * Además siguen deshabilitadas por isDateUnavailable().
      */
-    if (selected) {
+    if (state.minDate && iso < state.minDate) {
+      classes.push('past');
+    } else if (selected) {
+      /*
+       * Una fecha solo muestra UN estado visual principal.
+       * Así evitamos que festivo, víspera y selección se
+       * pisen entre sí. Las fechas ocupadas/retenidas no
+       * pueden formar parte de una selección.
+       */
       classes.push('selected');
     } else if (reason === 'confirmed') {
       classes.push('unavailable-confirmed');
