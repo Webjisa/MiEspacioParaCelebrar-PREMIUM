@@ -241,9 +241,11 @@
       </article>`).join('');
   }
 
-  function openSpaceEditor(root, sb, space) {
+  function openSpaceEditor(root, sb, space, pricing = {}) {
     const existing = document.querySelector('#private-space-modal');
     existing?.remove();
+
+    const price = key => Number(pricing?.[key] ?? 0);
 
     const modal = document.createElement('div');
     modal.id = 'private-space-modal';
@@ -251,42 +253,141 @@
     modal.innerHTML = `
       <div class="private-modal" role="dialog" aria-modal="true" aria-labelledby="private-modal-title">
         <div class="private-modal-head">
-          <div><p class="eyebrow">GESTIONAR ESPACIO</p><h2 id="private-modal-title">${esc(space.name)}</h2></div>
+          <div>
+            <p class="eyebrow">GESTIONAR ESPACIO</p>
+            <h2 id="private-modal-title">${esc(space.name)}</h2>
+          </div>
           <button class="button button-secondary" type="button" data-close-modal>Cerrar</button>
         </div>
+
         <form id="private-space-form">
           <div class="form-grid">
-            <div class="form-field"><label for="private-weekday">Lunes a jueves (€)</label><input id="private-weekday" type="number" min="0" step="0.01" value="${Number(space.weekday_price ?? 0)}"></div>
-            <div class="form-field"><label for="private-friday">Viernes (€)</label><input id="private-friday" type="number" min="0" step="0.01" value="${Number(space.friday_price ?? 0)}"></div>
-            <div class="form-field"><label for="private-saturday">Sábado (€)</label><input id="private-saturday" type="number" min="0" step="0.01" value="${Number(space.saturday_price ?? 0)}"></div>
-            <div class="form-field"><label for="private-sunday">Domingo (€)</label><input id="private-sunday" type="number" min="0" step="0.01" value="${Number(space.sunday_price ?? 0)}"></div>
-            <div class="form-field"><label for="private-opening">Hora de apertura</label><input id="private-opening" type="time" value="${esc(String(space.opening_time || '11:00').slice(0,5))}"></div>
-            <div class="form-field"><label for="private-closing">Hora de cierre</label><input id="private-closing" type="time" value="${esc(String(space.closing_time || '23:00').slice(0,5))}"></div>
-            <div class="form-field"><label for="private-cleaning-price">Limpieza (€)</label><input id="private-cleaning-price" type="number" min="0" step="0.01" value="${Number(space.cleaning_price ?? 0)}"></div>
-            <div class="form-field"><label for="private-deposit">Fianza (€)</label><input id="private-deposit" type="number" min="0" step="0.01" value="${Number(space.deposit ?? 0)}"></div>
-            <div class="form-field form-field-full"><label><input id="private-cleaning" type="checkbox" ${space.cleaning_available ? 'checked' : ''}> Ofrecer servicio de limpieza</label></div>
-            <div class="form-field form-field-full"><label for="private-conditions">Condiciones</label><textarea id="private-conditions" rows="5" maxlength="5000">${esc(space.conditions_text || '')}</textarea></div>
+            <div class="form-field">
+              <label for="private-monday">Lunes (€)</label>
+              <input id="private-monday" type="number" min="0" step="0.01" inputmode="decimal" value="${price('monday_price')}">
+            </div>
+
+            <div class="form-field">
+              <label for="private-tuesday">Martes (€)</label>
+              <input id="private-tuesday" type="number" min="0" step="0.01" inputmode="decimal" value="${price('tuesday_price')}">
+            </div>
+
+            <div class="form-field">
+              <label for="private-wednesday">Miércoles (€)</label>
+              <input id="private-wednesday" type="number" min="0" step="0.01" inputmode="decimal" value="${price('wednesday_price')}">
+            </div>
+
+            <div class="form-field">
+              <label for="private-thursday">Jueves (€)</label>
+              <input id="private-thursday" type="number" min="0" step="0.01" inputmode="decimal" value="${price('thursday_price')}">
+            </div>
+
+            <div class="form-field">
+              <label for="private-friday">Viernes (€)</label>
+              <input id="private-friday" type="number" min="0" step="0.01" inputmode="decimal" value="${price('friday_price')}">
+            </div>
+
+            <div class="form-field">
+              <label for="private-saturday">Sábado (€)</label>
+              <input id="private-saturday" type="number" min="0" step="0.01" inputmode="decimal" value="${price('saturday_price')}">
+            </div>
+
+            <div class="form-field">
+              <label for="private-sunday">Domingo (€)</label>
+              <input id="private-sunday" type="number" min="0" step="0.01" inputmode="decimal" value="${price('sunday_price')}">
+            </div>
+
+            <div class="form-field">
+              <label for="private-holiday">Festivo (€)</label>
+              <input id="private-holiday" type="number" min="0" step="0.01" inputmode="decimal" value="${price('holiday_price')}">
+            </div>
+
+            <div class="form-field">
+              <label for="private-holiday-eve">Víspera de festivo (€)</label>
+              <input id="private-holiday-eve" type="number" min="0" step="0.01" inputmode="decimal" value="${price('holiday_eve_price')}">
+            </div>
+
+            <div class="form-field">
+              <label for="private-opening">Hora de apertura</label>
+              <input id="private-opening" type="time" value="${esc(String(space.opening_time || '11:00').slice(0,5))}">
+            </div>
+
+            <div class="form-field">
+              <label for="private-closing">Hora de cierre</label>
+              <input id="private-closing" type="time" value="${esc(String(space.closing_time || '23:00').slice(0,5))}">
+            </div>
+
+            <div class="form-field">
+              <label for="private-cleaning-price">Limpieza (€)</label>
+              <input id="private-cleaning-price" type="number" min="0" step="0.01" inputmode="decimal" value="${Number(space.cleaning_price ?? 0)}">
+            </div>
+
+            <div class="form-field">
+              <label for="private-deposit">Fianza (€)</label>
+              <input id="private-deposit" type="number" min="0" step="0.01" inputmode="decimal" value="${Number(space.deposit ?? 0)}">
+            </div>
+
+            <div class="form-field form-field-full">
+              <label class="checkbox-field">
+                <input id="private-cleaning" type="checkbox" ${space.cleaning_available ? 'checked' : ''}>
+                <span>Ofrecer servicio de limpieza</span>
+              </label>
+            </div>
+
+            <div class="form-field form-field-full">
+              <label for="private-conditions">Condiciones</label>
+              <textarea id="private-conditions" rows="5" maxlength="5000">${esc(space.conditions_text || '')}</textarea>
+            </div>
           </div>
+
           <div id="private-space-message" class="notice" hidden aria-live="polite"></div>
-          <div class="private-modal-actions"><button class="button button-primary" type="submit">Guardar cambios</button><button class="button button-secondary" type="button" data-close-modal>Cancelar</button></div>
+
+          <div class="private-modal-actions">
+            <button class="button button-primary" type="submit">Guardar cambios</button>
+            <button class="button button-secondary" type="button" data-close-modal>Cancelar</button>
+          </div>
         </form>
       </div>`;
 
     document.body.appendChild(modal);
-    modal.querySelectorAll('[data-close-modal]').forEach(button => button.addEventListener('click', () => modal.remove()));
+
+    modal.querySelectorAll('[data-close-modal]').forEach(button => {
+      button.addEventListener('click', () => modal.remove());
+    });
 
     modal.querySelector('#private-space-form').addEventListener('submit', async event => {
       event.preventDefault();
+
       const submit = modal.querySelector('button[type="submit"]');
       const message = modal.querySelector('#private-space-message');
+
       submit.disabled = true;
       setMessage(message, 'Guardando cambios…');
 
-      const num = id => Number(modal.querySelector(id).value || 0);
+      const num = id => {
+        const value = Number(modal.querySelector(id)?.value ?? 0);
+        return Number.isFinite(value) && value >= 0 ? value : 0;
+      };
+
       try {
-        const result = await sb.rpc('owner_update_space', {
+        const pricingResult = await sb.rpc('owner_update_space_pricing', {
           p_space_id: space.id,
-          p_weekday_price: num('#private-weekday'),
+          p_monday_price: num('#private-monday'),
+          p_tuesday_price: num('#private-tuesday'),
+          p_wednesday_price: num('#private-wednesday'),
+          p_thursday_price: num('#private-thursday'),
+          p_friday_price: num('#private-friday'),
+          p_saturday_price: num('#private-saturday'),
+          p_sunday_price: num('#private-sunday'),
+          p_holiday_price: num('#private-holiday'),
+          p_holiday_eve_price: num('#private-holiday-eve')
+        });
+
+        if (pricingResult.error) throw pricingResult.error;
+
+        const operationalResult = await sb.rpc('owner_update_space', {
+          p_space_id: space.id,
+          p_weekday_price: num('#private-monday'),
           p_friday_price: num('#private-friday'),
           p_saturday_price: num('#private-saturday'),
           p_sunday_price: num('#private-sunday'),
@@ -297,7 +398,9 @@
           p_deposit: num('#private-deposit'),
           p_conditions: modal.querySelector('#private-conditions').value.trim() || null
         });
-        if (result.error) throw result.error;
+
+        if (operationalResult.error) throw operationalResult.error;
+
         setMessage(message, 'Cambios guardados correctamente.', 'success');
         setTimeout(() => modal.remove(), 500);
       } catch (error) {
@@ -352,12 +455,35 @@
         button.addEventListener('click', async () => {
           const space = spaces.find(item => String(item.id) === String(button.dataset.editSpace));
           if (!space) return;
-          const detail = await sb.rpc('get_owner_space_detail', { p_space_id: space.id });
-          if (detail.error || !detail.data?.[0]) {
-            setMessage(message, detail.error?.message || 'No se ha podido cargar el espacio.', 'error');
-            return;
+
+          button.disabled = true;
+
+          try {
+            const [detail, pricing] = await Promise.all([
+              sb.rpc('get_owner_space_detail', { p_space_id: space.id }),
+              sb.rpc('owner_get_space_pricing', { p_space_id: space.id })
+            ]);
+
+            if (detail.error || !detail.data?.[0]) {
+              throw detail.error || new Error('No se ha podido cargar el espacio.');
+            }
+
+            if (pricing.error) {
+              throw pricing.error;
+            }
+
+            openSpaceEditor(
+              root,
+              sb,
+              { ...space, ...detail.data[0] },
+              pricing.data?.[0] || {}
+            );
+          } catch (error) {
+            console.error('Error cargando configuración del espacio:', error);
+            setMessage(message, error?.message || 'No se ha podido cargar la configuración del espacio.', 'error');
+          } finally {
+            button.disabled = false;
           }
-          openSpaceEditor(root, sb, { ...space, ...detail.data[0] });
         });
       });
 
