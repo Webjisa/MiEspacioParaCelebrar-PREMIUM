@@ -50,9 +50,20 @@
   }
 
   async function getSessionUser(sb) {
-    const result = await sb.auth.getUser();
-    if (result.error) throw result.error;
-    return result.data?.user || null;
+    /*
+     * Primero consultamos la sesión local. Esto evita que una entrada
+     * directa en area-privada.html quede esperando innecesariamente una
+     * petición de red cuando no existe ninguna sesión.
+     */
+    const sessionResult = await sb.auth.getSession();
+    if (sessionResult.error) throw sessionResult.error;
+
+    const sessionUser = sessionResult.data?.session?.user || null;
+    if (!sessionUser) return null;
+
+    const userResult = await sb.auth.getUser();
+    if (userResult.error) throw userResult.error;
+    return userResult.data?.user || null;
   }
 
   async function getProfile(sb, userId) {
@@ -383,9 +394,29 @@
     }
   }
 
-  window.initPrivatePage = async function initPrivatePage() {
+  async function initPrivatePage() {
     const page = document.body?.dataset.page || '';
     if (page === 'private-login') await initLoginPage();
     if (page === 'private-area') await initPrivateArea();
-  };
+  }
+
+  /*
+   * No dependemos exclusivamente de app.js para arrancar el área privada.
+   * Si otra parte del frontend falla, el control de acceso debe seguir
+   * funcionando y nunca dejar la pantalla indefinidamente en
+   * “Comprobando acceso…”.
+   */
+  window.initPrivatePage = initPrivatePage;
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      initPrivatePage().catch(error => {
+        console.error('Error inicializando el área privada:', error);
+      });
+    }, { once: true });
+  } else {
+    initPrivatePage().catch(error => {
+      console.error('Error inicializando el área privada:', error);
+    });
+  }
 })();
