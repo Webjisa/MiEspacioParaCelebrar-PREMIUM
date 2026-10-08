@@ -24,7 +24,7 @@
   --radius-md: 18px;
   --radius-lg: 26px;
 
-  --container: 1180px;
+  --container: 1140px;
   --focus: 0 0 0 3px rgba(41, 77, 61, 0.18);
 }
 
@@ -109,11 +109,11 @@ main {
 
 .nav {
   position: relative;
-  min-height: 68px;
+  min-height: 64px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
+  gap: 16px;
 }
 
 .brand {
@@ -121,8 +121,8 @@ main {
   align-items: center;
   text-decoration: none;
   color: var(--text);
-  font-size: 1rem;
-  font-weight: 850;
+  font-size: 0.98rem;
+  font-weight: 800;
   letter-spacing: -0.025em;
   white-space: nowrap;
 }
@@ -130,19 +130,19 @@ main {
 .nav-links {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
 }
 
 .nav-links a {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 42px;
-  padding: 9px 13px;
+  min-height: 38px;
+  padding: 8px 11px;
   border-radius: 11px;
   color: var(--muted);
   text-decoration: none;
-  font-size: 0.94rem;
+  font-size: 0.88rem;
   font-weight: 700;
   transition:
     background 160ms ease,
@@ -157,8 +157,8 @@ main {
 
 .nav-toggle {
   display: none;
-  min-height: 42px;
-  padding: 9px 13px;
+  min-height: 38px;
+  padding: 8px 11px;
   border: 1px solid var(--line);
   border-radius: 11px;
   background: var(--surface);
@@ -171,13 +171,13 @@ main {
 ========================= */
 
 .hero {
-  padding: 84px 0 68px;
+  padding: 62px 0 52px;
 }
 
 .hero-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
-  gap: 52px;
+  gap: 40px;
   align-items: center;
 }
 
@@ -199,16 +199,16 @@ h3 {
 }
 
 h1 {
-  max-width: 720px;
+  max-width: 760px;
   margin: 12px 0 18px;
-  font-size: clamp(2.35rem, 5.2vw, 4.35rem);
+  font-size: clamp(2.2rem, 4.4vw, 4rem);
   line-height: 0.98;
   letter-spacing: -0.065em;
 }
 
 h2 {
   margin: 0 0 12px;
-  font-size: clamp(1.65rem, 2.6vw, 2.4rem);
+  font-size: clamp(1.55rem, 2.4vw, 2.2rem);
   line-height: 1.08;
   letter-spacing: -0.045em;
 }
@@ -225,7 +225,7 @@ p {
 .lead {
   max-width: 62ch;
   color: var(--muted);
-  font-size: 1.02rem;
+  font-size: 1rem;
 }
 
 .hero-actions {
@@ -324,7 +324,7 @@ p {
       #f3eee5 100%
     );
   color: var(--green);
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   font-weight: 850;
   text-align: center;
 }
@@ -336,7 +336,7 @@ p {
 .hero-card-body strong {
   display: block;
   margin-bottom: 8px;
-  font-size: 1rem;
+  font-size: 1.08rem;
 }
 
 .card-copy {
@@ -349,7 +349,7 @@ p {
 ========================= */
 
 .section {
-  padding: 62px 0;
+  padding: 58px 0;
 }
 
 .section-header {
@@ -411,7 +411,7 @@ p {
 
 .card-title {
   margin-bottom: 8px;
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   font-weight: 850;
   letter-spacing: -0.02em;
 }
@@ -435,7 +435,7 @@ p {
   flex: 0 0 auto;
   white-space: nowrap;
   color: var(--green);
-  font-size: 0.98rem;
+  font-size: 0.95rem;
   font-weight: 900;
 }
 
@@ -486,7 +486,7 @@ select,
 textarea {
   width: 100%;
   min-height: 44px;
-  padding: 9px 12px;
+  padding: 9px 11px;
   background: #ffffff;
   border: 1px solid var(--line);
   border-radius: 11px;
@@ -494,7 +494,7 @@ textarea {
 }
 
 textarea {
-  min-height: 105px;
+  min-height: 100px;
   resize: vertical;
 }
 
@@ -509,6 +509,43 @@ textarea:focus {
 .field-help {
   color: var(--muted);
   font-size: 0.82rem;
+}
+
+
+
+/* =========================
+   COMPACT CHECKBOX / RADIO
+========================= */
+
+input[type="checkbox"],
+input[type="radio"] {
+  width: 18px;
+  min-width: 18px;
+  height: 18px;
+  min-height: 18px;
+  margin: 0;
+  padding: 0;
+  accent-color: var(--green);
+  box-shadow: none;
+}
+
+input[type="checkbox"]:focus,
+input[type="radio"]:focus {
+  box-shadow: var(--focus);
+}
+
+.field:has(input[type="checkbox"]),
+.field:has(input[type="radio"]) {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.field:has(input[type="checkbox"]) label,
+.field:has(input[type="radio"]) label {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 700;
 }
 
 /* =========================
@@ -558,11 +595,11 @@ textarea:focus {
 
 .calendar-day {
   position: relative;
-  min-height: 58px;
+  min-height: 52px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 8px;
+  padding: 6px;
   background: #ffffff;
 }
 
@@ -667,7 +704,7 @@ textarea:focus {
 }
 
 .kpi {
-  padding: 16px;
+  padding: 20px;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 16px;
@@ -675,7 +712,7 @@ textarea:focus {
 
 .kpi-value {
   margin-top: 4px;
-  font-size: 1.65rem;
+  font-size: 1.9rem;
   font-weight: 900;
 }
 
@@ -699,7 +736,7 @@ table {
 
 th,
 td {
-  padding: 10px 12px;
+  padding: 13px 14px;
   border-bottom: 1px solid var(--line);
   text-align: left;
   vertical-align: top;
@@ -723,7 +760,7 @@ tr:last-child td {
   min-height: 26px;
   padding: 4px 8px;
   border-radius: 999px;
-  font-size: 0.72rem;
+  font-size: 0.77rem;
   font-weight: 850;
 }
 
@@ -752,7 +789,7 @@ tr:last-child td {
 ========================= */
 
 .notice {
-  padding: 14px 16px;
+  padding: 12px 14px;
   border-radius: 12px;
   background: var(--surface-soft);
   color: var(--muted);
@@ -768,7 +805,7 @@ tr:last-child td {
 }
 
 .empty {
-  padding: 40px 20px;
+  padding: 32px 18px;
   color: var(--muted);
   text-align: center;
 }
@@ -782,7 +819,7 @@ tr:last-child td {
 ========================= */
 
 .site-footer {
-  padding: 30px 0;
+  padding: 24px 0;
   background: #ffffff;
   border-top: 1px solid var(--line);
   color: var(--muted);
@@ -845,7 +882,7 @@ tr:last-child td {
     flex-direction: column;
     align-items: stretch;
     gap: 3px;
-    padding: 8px;
+    padding: 6px;
     background: #ffffff;
     border: 1px solid var(--line);
     border-radius: 14px;
@@ -863,16 +900,16 @@ tr:last-child td {
   }
 
   .hero {
-    padding: 40px 0 28px;
+    padding: 38px 0 28px;
   }
 
   h1 {
-    font-size: clamp(2.05rem, 10vw, 3rem);
+    font-size: clamp(2rem, 10vw, 2.8rem);
     letter-spacing: -0.06em;
   }
 
   .lead {
-    font-size: 0.96rem;
+    font-size: 0.95rem;
   }
 
   .hero-actions {
@@ -885,7 +922,7 @@ tr:last-child td {
   }
 
   .section {
-    padding: 46px 0;
+    padding: 42px 0;
   }
 
   .section-header {
@@ -911,11 +948,11 @@ tr:last-child td {
   }
 
   .panel {
-    padding: 19px;
+    padding: 16px;
   }
 
   .calendar-day {
-    min-height: 47px;
+    min-height: 43px;
     padding: 7px 4px;
     font-size: 0.9rem;
   }
